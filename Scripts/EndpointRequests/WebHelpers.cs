@@ -1,4 +1,4 @@
-﻿
+
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -35,6 +35,25 @@ public static class WebHelpers
 		}
 	}
 
+	// Downloads (e.g. 300MB+ resource packs / app updates) must NOT use PLClient's
+	// 60 second timeout: HttpClient.Timeout covers the entire content download, so any
+	// large file on a slower (e.g. mobile) connection would time out partway through.
+	static HttpClient downloadClient = null;
+	public static HttpClient DownloadClient
+	{
+		get
+		{
+			if (downloadClient is not null)
+				return downloadClient;
+			downloadClient = new()
+			{
+				Timeout = Timeout.InfiniteTimeSpan,
+			};
+			downloadClient.DefaultRequestHeaders.Add("User-Agent", $"PegLeg/PegLeg-{AppConfig.PegLegVersion}");
+			return downloadClient;
+		}
+	}
+
 	public class BoundHttpsRequestMessage : HttpRequestMessage
 	{
 		public BoundHttpsRequestMessage() : base() { }
@@ -60,6 +79,10 @@ public static class WebHelpers
 
 	public static async Task<bool> Ping(string hostnameOrAddress)
 	{
+		// ICMP ping requires raw-socket privileges that Android apps don't have,
+		// so probe TCP instead on mobile (DNS port is fast and rarely filtered).
+		if (OS.HasFeature("mobile"))
+			return await TcpProbe(hostnameOrAddress, 53, 3000) || await TcpProbe("1.1.1.1", 53, 3000);
 		using Ping ping = new();
 		bool success = false;
 		try
@@ -72,6 +95,21 @@ public static class WebHelpers
 			GD.PrintErr(e);
 		}
 		return success;
+	}
+
+	static async Task<bool> TcpProbe(string hostnameOrAddress, int port, int timeoutMs)
+	{
+		try
+		{
+			using TcpClient client = new();
+			using var cts = new CancellationTokenSource(timeoutMs);
+			await client.ConnectAsync(hostnameOrAddress, port, cts.Token);
+			return true;
+		}
+		catch
+		{
+			return false;
+		}
 	}
 
 	public static BoundHttpsRequestMessage MakeRequest(this Uri uri, string path, HttpMethod method = null) =>
@@ -310,23 +348,29 @@ public static class WebHelpers
 
 	public static async Task<HttpResponseMessage> SendAsDownloadR(this BoundHttpsRequestMessage msg, Stream dest, IProgress<(long, long)> progress = null, CancellationToken ct = default)
 	{
-		var response = await msg.BoundClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, ct);
+		// Route downloads through the timeout-free client (see DownloadClient), with only a
+		// very generous overall cap so a truly dead connection can't hang the boot sequence.
+		using var capCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+		capCts.CancelAfter(TimeSpan.FromMinutes(60));
+		var dlCt = capCts.Token;
+
+		var response = await DownloadClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, dlCt);
 		var contentLength = response.Content.Headers.ContentLength;
 
-		using var download = await response.Content.ReadAsStreamAsync(ct);
+		using var download = await response.Content.ReadAsStreamAsync(dlCt);
 
-		// Ignore progress reporting when no progress reporter was 
+		// Ignore progress reporting when no progress reporter was
 		// passed or when the content length is unknown
 		if (progress == null || !contentLength.HasValue)
 		{
-			await download.CopyToAsync(dest, ct);
+			await download.CopyToAsync(dest, dlCt);
 			return response;
 		}
 
 		// Convert absolute progress (bytes downloaded) into relative progress (0% - 100%)
 		var relativeProgress = new Progress<long>(totalBytes => progress.Report((totalBytes, contentLength.Value)));
 		// Use extension method to report progress while downloading
-		await download.CopyToAsync(dest, 81920, relativeProgress, ct);
+		await download.CopyToAsync(dest, 81920, relativeProgress, dlCt);
 		progress.Report((contentLength.Value, contentLength.Value));
 		return response;
 	}

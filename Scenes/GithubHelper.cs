@@ -50,6 +50,7 @@ public static class GithubHelper
 	{
 		public string name { get; init; }
 		public string browser_download_url { get; init; }
+		public long size { get; init; }
 
 		public async Task DownloadTo(Stream dest, IProgress<(long, long)> progress = null, CancellationToken ct = default)
 		{

@@ -131,29 +131,37 @@ public partial class Bootstrap : Node
 		isFirstBoot = !hasBooted;
 		if (isFirstBoot)
 		{
-			window.Mode = Window.ModeEnum.Windowed;
-			window.ContentScaleSize = window.Size = bootSize;
-			window.Transparent = true;
-			window.TransparentBg = true;
-			window.Borderless = true;
-			window.Unfocusable = false;
+			// Window chrome/positioning is desktop-only: on mobile the OS owns the window,
+			// and forcing transparency/size can break rendering on the mobile renderer.
+			if (!OS.HasFeature("mobile"))
+			{
+				window.Mode = Window.ModeEnum.Windowed;
+				window.ContentScaleSize = window.Size = bootSize;
+				window.Transparent = true;
+				window.TransparentBg = true;
+				window.Borderless = true;
+				window.Unfocusable = false;
+			}
 
 			AppConfig.MigrateAndPreloadConfig();
 			PaletteHelper.Initialise();
-			var preferredScreen = AppConfig.Get("ui", "preferred_screen", -1);
-			GD.Print($"Preferred Screen: {preferredScreen}");
-			if (preferredScreen <= -1)
+			if (!OS.HasFeature("mobile"))
 			{
-				preferredScreen = DisplayServer.GetScreenFromRect(
-					new(
-						window.GetMousePosition() + window.Position,
-						Vector2.One
-					)
-				);
-				GD.Print($"Auto Screen: {preferredScreen}");
+				var preferredScreen = AppConfig.Get("ui", "preferred_screen", -1);
+				GD.Print($"Preferred Screen: {preferredScreen}");
+				if (preferredScreen <= -1)
+				{
+					preferredScreen = DisplayServer.GetScreenFromRect(
+						new(
+							window.GetMousePosition() + window.Position,
+							Vector2.One
+						)
+					);
+					GD.Print($"Auto Screen: {preferredScreen}");
+				}
+				window.CurrentScreen = preferredScreen;
+				window.MoveToCenter();
 			}
-			window.CurrentScreen = preferredScreen;
-			window.MoveToCenter();
 			BufferKeySetting.LoadLocalOrgsAndChannels();
 			CatalogRequests.CleanCosmeticResourceCache();
 		}
@@ -449,7 +457,7 @@ public partial class Bootstrap : Node
 				targetScene = desktopInterface;
 		}
 
-		if (isFirstBoot)
+		if (isFirstBoot && !OS.HasFeature("mobile"))
 		{
 			var oldMode = window.Mode;
 			window.Mode = Window.ModeEnum.Windowed;
@@ -465,8 +473,11 @@ public partial class Bootstrap : Node
 			window.Mode = oldMode;
 		}
 
-		var iconPath = ProjectSettings.GetSettingWithOverride("application/config/icon").ToString();
-		DisplayServer.SetIcon(ResourceLoader.Load<Texture2D>(iconPath).GetImage());
+		if (!OS.HasFeature("mobile"))
+		{
+			var iconPath = ProjectSettings.GetSettingWithOverride("application/config/icon").ToString();
+			DisplayServer.SetIcon(ResourceLoader.Load<Texture2D>(iconPath).GetImage());
+		}
 
 		await Helpers.WaitForFrame();
 		await Helpers.WaitForFrame();

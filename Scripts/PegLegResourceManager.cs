@@ -1,8 +1,9 @@
-﻿using Godot;
+using Godot;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -103,6 +104,22 @@ public class PegLegResourceManager
 	}
 
 	static bool hasLoadedResources = false;
+	// Verifies a cached pack against its release asset size, deleting it when it looks
+	// like a corrupt/partial download (older versions wrote straight to the final path).
+	static bool LocalPackageValid(PackageVersion requirement, GithubHelper.ReleaseAsset asset)
+	{
+		bool valid;
+		using (var check = FileAccess.Open(requirement.LocalPackagePath, FileAccess.ModeFlags.Read))
+		{
+			valid = check is not null && (asset.size <= 0 || (long)check.GetLength() == asset.size);
+		}
+		if (!valid)
+		{
+			GD.Print($"Local pack {requirement} failed verification, re-downloading...");
+			DirAccess.RemoveAbsolute(requirement.LocalPackagePath);
+		}
+		return valid;
+	}
 	public static async Task FetchAndLoadPackages(int targetMajor, int targetMinor, Action<string, float> onProgress = null)
 	{
 		if (hasLoadedResources)
@@ -157,17 +174,47 @@ public class PegLegResourceManager
 			DirAccess.MakeDirAbsolute(globalPackageFolderPath);
 		foreach (var requirement in latestVersion.Requirements)
 		{
-			if (requirement.HasLocalPackage())
-				continue;
 			if (!releases.TryGetValue(requirement, out var asset))
 			{
 				GD.PushWarning($"Version list is missing requirement \"{requirement}\"");
 				continue;
 			}
+			// Packs cached by older versions may be corrupt partials (they were written
+			// directly to the final path), so verify size before trusting them.
+			if (requirement.HasLocalPackage() && LocalPackageValid(requirement, asset))
+				continue;
 			WebHelpers.DownloadProgressHandle downloadProgress = new();
 			downloadProgress.OnProgress += () => onProgress?.Invoke($"Downloading Resource Pack\n{requirement.version}", downloadProgress.ProgressPercent / 100);
-			using FileAccessStream fileStream = new(requirement.LocalPackagePath, FileAccess.ModeFlags.Write);
-			await asset.DownloadTo(fileStream, downloadProgress);
+			// Download to a temp file first so an interrupted/failed download can never
+			// poison the local package cache, and never let a download failure kill the
+			// boot sequence: fall back to local resources instead.
+			string tmpPackagePath = requirement.LocalPackagePath + ".tmp";
+			try
+			{
+				if (FileAccess.FileExists(tmpPackagePath))
+					DirAccess.RemoveAbsolute(tmpPackagePath);
+				using (FileAccessStream fileStream = new(tmpPackagePath, FileAccess.ModeFlags.Write))
+				{
+					await asset.DownloadTo(fileStream, downloadProgress);
+				}
+				using (var verifyFile = FileAccess.Open(tmpPackagePath, FileAccess.ModeFlags.Read))
+				{
+					if (verifyFile is null || (asset.size > 0 && (long)verifyFile.GetLength() != asset.size))
+						throw new IOException($"Downloaded pack failed verification ({requirement.version})");
+				}
+				DirAccess.RemoveAbsolute(requirement.LocalPackagePath);
+				var renameErr = DirAccess.RenameAbsolute(tmpPackagePath, requirement.LocalPackagePath);
+				if (renameErr != Error.Ok)
+					throw new IOException($"Failed to store resource pack ({renameErr})");
+			}
+			catch (Exception downloadError)
+			{
+				GD.PushWarning($"Failed to download resource pack {requirement.version}, using local resources instead. ({downloadError.Message})");
+				if (FileAccess.FileExists(tmpPackagePath))
+					DirAccess.RemoveAbsolute(tmpPackagePath);
+				await FallbackLoadLocalResources(targetMajor, targetMinor, onProgress);
+				return;
+			}
 		}
 		await Helpers.WaitForFrame();
 		onProgress?.Invoke("Applying Resource Packs", -1);
@@ -297,6 +344,14 @@ public class PegLegResourceManager
 	{
 		if (hasPreloaded)
 			return;
+		// Phones (especially budget SoCs with 4-6GB RAM) cannot hold every item texture
+		// at once; preloading them all stalls the boot sequence for minutes and risks an
+		// out-of-memory kill. Load textures lazily on demand instead.
+		if (OS.HasFeature("mobile"))
+		{
+			hasPreloaded = true;
+			return;
+		}
 		int templatesProcessed = 0;
 		//int concurrentTemplates = 0;
 		var templates = GameItemTemplate.GetTemplates().ToArray();
