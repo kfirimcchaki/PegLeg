@@ -2,193 +2,197 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 
-public class QuestSlot
+public class QuestSlot(GameItemTemplate defaultTemplate)
 {
-    public QuestSlot(GameItemTemplate questTemplate)
-    {
-        this.questTemplate = questTemplate;
-    }
+	public void ClearQuestItem() => LinkQuestItem(null);
+	public void LinkQuestItem(GameItem newQuestItem)
+	{
+		if (newQuestItem == questItem)
+			return;
+		questItem?.OnChanged -= ProfileItemChanged;
+		questItem = newQuestItem;
+		questItem?.OnChanged += ProfileItemChanged;
+		ProfileItemChanged();
+	}
 
-    public void ClearQuestItem() => LinkQuestItem(null);
-    public void LinkQuestItem(GameItem newQuestItem)
-    {
-        if (newQuestItem == questItem)
-            return;
-        if (questItem is not null)
-            questItem.OnChanged -= ProfileItemChanged;
-        questItem = newQuestItem;
-        if (questItem is null)
-            return;
-        OnPropertiesUpdated?.Invoke(this);
-        questItem.OnChanged += ProfileItemChanged;
-        questTemplate = questItem.template;
-    }
+	public string questId => questItem?.templateId ?? questTemplate.TemplateId;
+	public GameItemTemplate questTemplate => questItem?.template ?? defaultTemplate;
+	public GameItem questItem { get; private set; }
 
-    void ProfileItemChanged() => OnPropertiesUpdated?.Invoke(this);
+	void ProfileItemChanged() => OnPropertiesUpdated?.Invoke();
+	public event Action OnPropertiesUpdated;
 
-    public string questId => questItem?.templateId ?? questTemplate.TemplateId;
-    public GameItemTemplate questTemplate { get; private set; }
-    public GameItem questItem { get; private set; }
-
-    public event Action<QuestSlot> OnPropertiesUpdated;
-
-    public bool isUnlocked => questItem?.profile is not null;
-    public bool isNew => !(questItem?.IsSeen ?? true);
-    public bool isPinned => questItem?.profile?.account.HasPinnedQuest(questItem.uuid) ?? false;
-    public bool isComplete => questItem?.attributes["quest_state"]?.ToString() == "Claimed";
-    public bool isRerollable => isUnlocked && questTemplate.Category == "DailyQuests" && questItem.profile.account.CanRerollQuest();
+	public bool isUnlocked => questItem?.profile is not null;
+	public bool isNew => !(questItem?.IsSeen ?? true);
+	public bool isPinned => questItem?.QuestPinned ?? false;
+	public bool isActive => questItem?.QuestState == "Active";
+	public bool isCompleted => questItem?.QuestState == "Completed";
+	public bool isClaimed => questItem?.QuestState == "Claimed";
+	public bool isRerollable => isUnlocked && questTemplate.Category == "DailyQuests" && questItem.profile.account.CanRerollQuest();
 }
 
 public partial class QuestGroupEntry : Control
 {
-    [Signal]
-    public delegate void NameChangedEventHandler(string name);
-    [Signal]
-    public delegate void IconChangedEventHandler(Texture2D icon);
-    [Signal]
-    public delegate void NotificationVisibleEventHandler(bool visible);
-    [Signal]
-    public delegate void PressedEventHandler();
+	[Signal]
+	public delegate void NameChangedEventHandler(string name);
+	[Signal]
+	public delegate void NotificationVisibleEventHandler(bool visible);
+	[Signal]
+	public delegate void PressedEventHandler();
 
-    [Export]
-    Texture2D pinnedTex;
-    [Export]
-    Texture2D completeTex;
-    [Export]
-    CheckButton highlightCheck;
+	[Export]
+	Control pinnedIcon;
+	[Export]
+	Control completeIcon;
+	[Export]
+	Control notification;
+	[Export]
+	CheckButton highlightCheck;
+	[Export]
+	RefreshTimerHook eventTimer;
+	[Export]
+	ProgressBar sequenceProgress;
 
-    bool hasNotification = false;
-    public bool HasNotification => hasNotification;
-    bool hasAvailableQuests = false;
-    public bool HasAvailableQuests => hasAvailableQuests;
+	bool hasNotification = false;
+	public bool HasNotification => hasNotification;
+	public bool HasQuests => questSlotList.Any(q => q.isUnlocked && (questGroupData.ShowComplete || !q.isClaimed));
 
-    public List<QuestSlot> questSlotList { get; private set; } = new();
-    bool isSequence = false;
-    public bool IsSequence => isSequence;
-    bool? showLocked = false;
-    public bool ShowLocked => showLocked ?? isSequence;
 
-    public async Task SetupQuestGroup(string name, JsonObject questGroup)
-    {
-        EmitSignal(SignalName.NameChanged, name);
-        questSlotList.Clear();
-        hasAvailableQuests = false;
-        Visible = false;
+	public List<QuestSlot> questSlotList { get; private set; } = [];
+	public QuestGroupData questGroupData { get; private set; }
 
-        var account = GameAccount.activeAccount;
-        if (!await account.Authenticate())
-            return;
+	public void SetupQuestGroup(QuestGroupData questGroup)
+	{
+		EmitSignalNameChanged(questGroup.displayName);
+		questGroupData = questGroup;
+		questSlotList.Clear();
 
-        showLocked = questGroup["showLocked"]?.GetValue<bool>();
+		var profile = GameAccount.ActiveAccount.GetProfile(FnProfileTypes.AccountItems);
 
-        if (questGroup["questlines"] is JsonArray questlines)
-        {
-            isSequence = true;
-            foreach (var qline in questlines.Select(n=>n.AsArray()))
-            {
-                bool skip = true;
-                for (int i = 0; i < qline.Count; i++)
-                {
-                    string currentQuestId = qline[i].ToString();
+		if (questGroup.chain)
+		{
+			//find first quest that exists in inventory
+			QuestSlot lastSlot = null;
+			foreach (var qline in questGroup.Questlines)
+			{
+				GameItem questItem = profile.GetFirstTemplateItem(qline.FirstOrDefault()?.TemplateId);
+				if (questItem is null && questGroup.Questlines.Length > 1)
+					continue;
+				foreach (var quest in qline)
+				{
+					questItem ??= profile.GetFirstTemplateItem(quest.TemplateId);
 
-                    GameItem questItem = 
-                        (await account.GetProfile(FnProfileTypes.AccountItems).Query())
-                        .GetFirstTemplateItem(currentQuestId);
+					QuestSlot newData = new(quest);
+					newData.LinkQuestItem(questItem);
+					newData.OnPropertiesUpdated += UpdateNotificationAndIcon;
+					questSlotList.Add(newData);
 
-                    if (i == 0 && questItem is null)
-                        break;
+					lastSlot = newData;
+					questItem = null;
+				}
+				break;
+			}
+			UpdateSequenceProgress();
+			UpdateEventTimer();
+			UpdateNotificationAndIcon();
+			return;
+		}
 
-                    skip = false;
+		foreach (var quest in questGroup.Quests)
+		{
+			GameItem questItem = profile.GetFirstTemplateItem(quest?.TemplateId);
 
-                    GameItemTemplate questTemplate = questItem?.template ?? GameItemTemplate.Get(currentQuestId);
+			QuestSlot newData = new(quest);
+			newData.LinkQuestItem(questItem);
+			newData.OnPropertiesUpdated += UpdateNotificationAndIcon;
+			questSlotList.Add(newData);
+		}
 
-                    QuestSlot newData = new(questTemplate);
-                    newData.LinkQuestItem(questItem);
-                    newData.OnPropertiesUpdated += UpdateNotificationAndIcon;
-                    questSlotList.Add(newData);
+		var enduranceQuest = questSlotList.FirstOrDefault(q => q.isUnlocked && (q.questTemplate?.DisplayName?.EndsWith("Wave 5") ?? false));
+		if (enduranceQuest is not null)
+			EmitSignal(SignalName.NameChanged, enduranceQuest.questTemplate.DisplayName[..^7]);
 
-                    if(i==qline.Count-1 && newData.isComplete)
-                        EmitSignal(SignalName.IconChanged, completeTex);
-                }
-                if (skip)
-                    continue;
-                hasAvailableQuests = questSlotList.Count > 0;
+		var weeklySthQuest = questSlotList.FirstOrDefault(q =>
+			q.isUnlocked &&
+			q.questTemplate is GameItemTemplate qTemp &&
+			qTemp.Category == "LTE_HordeV3" &&
+			qTemp.DisplayName.EndsWith(" (Weekly)")
+		);
+		if (weeklySthQuest is not null)
+			EmitSignal(SignalName.NameChanged, "Weekly STH: " + weeklySthQuest.questTemplate.DisplayName[..^9]);
 
-                UpdateNotificationAndIcon(null);
-                Visible = true;
-                return;
-            }
-        }
+		UpdateSequenceProgress();
+		UpdateEventTimer();
+		UpdateNotificationAndIcon();
+	}
 
-        if(questGroup["quests"] is JsonArray quests)
-        {
-            isSequence = questGroup["sequence"]?.GetValue<bool>() ?? false;
-            for (int i = 0; i < quests.Count; i++)
-            {
-                string currentQuestId = quests[i].ToString();
+	public void UpdateSequenceProgress()
+	{
+		if (sequenceProgress is null)
+			return;
+		if (!questGroupData.ShowProgress)
+		{
+			sequenceProgress.Visible = false;
+			return;
+		}
+		sequenceProgress.Visible = true;
+		sequenceProgress.MaxValue = questSlotList.Count;
+		sequenceProgress.Value = questSlotList.Count(q => q.isClaimed);
+		sequenceProgress.SelfModulate =
+			sequenceProgress.MaxValue == sequenceProgress.Value ?
+			Colors.Green : Colors.Yellow;
+	}
 
-                GameItem questItem =
-                        (await account.GetProfile(FnProfileTypes.AccountItems).Query())
-                        .GetFirstTemplateItem(currentQuestId);
+	public void UpdateEventTimer()
+	{
+		if (eventTimer is null)
+			return;
+		eventTimer.Visible = true;
+		switch (questGroupData.timer)
+		{
+			case QuestTimerMode.Weekly:
+				eventTimer.SetTimerType(2);
+				return;
+			case QuestTimerMode.Daily:
+				eventTimer.SetTimerType(1);
+				return;
+			case QuestTimerMode.None:
+				eventTimer.Visible = false;
+				return;
+		}
+		if (GameCalender.TryGetFlagRange(questGroupData.eventFlag, out var startDate, out var endDate))
+		{
+			eventTimer.SetCustomRefreshTime(endDate, startDate);
+		}
+		eventTimer.Visible = false;
+	}
 
-                GameItemTemplate questTemplate = questItem?.template ?? GameItemTemplate.Get(currentQuestId);
+	public void UpdateNotificationAndIcon()
+	{
+		var notif = questSlotList.Any(questData => questData.isNew && !questData.isClaimed);
+		notification?.Visible = notif;
+		EmitSignalNotificationVisible(notif);
+		pinnedIcon?.Visible = questSlotList.Any(q => (!questGroupData.ShowLocked || q.isUnlocked) && q.isPinned);
+		completeIcon?.Visible = questSlotList.All(q => (!questGroupData.ShowLocked || q.isUnlocked) && q.isClaimed);
+	}
 
-                QuestSlot newData = new(questTemplate);
-                newData.LinkQuestItem(questItem);
-                newData.OnPropertiesUpdated += UpdateNotificationAndIcon;
-                questSlotList.Add(newData);
-            }
-            hasAvailableQuests = questSlotList.Exists(q => q.isUnlocked);
+	public void LinkButtonGroup(ButtonGroup buttonGroup)
+	{
+		highlightCheck.ButtonGroup = buttonGroup;
+	}
 
-            //makes the endurance daily group show which region the edurance is in
-            if(
-                questSlotList.FirstOrDefault(q => q.isUnlocked)?.questTemplate["DisplayName"].ToString() is string firstQuestName && 
-                firstQuestName.EndsWith("Wave 5")
-              )
-                EmitSignal(SignalName.NameChanged, firstQuestName[..^7]);
+	public void Press()
+	{
+		highlightCheck.ButtonPressed = true;
+		EmitSignalPressed();
+	}
 
-            UpdateNotificationAndIcon(null);
-            Visible = true;
-            return;
-        }
-
-        //GD.PushWarning($"Error when handling Quest Group \"{name}\"");
-    }
-    
-    public void UpdateNotificationAndIcon(QuestSlot _)
-    {
-        hasNotification = questSlotList.Any(questData => questData.isNew && (isSequence || !questData.isComplete));
-        EmitSignal(SignalName.NotificationVisible, hasNotification);
-        bool isPinned = questSlotList.Any(q => q.isPinned);
-        bool isComplete = questSlotList.All(q => q.isComplete);
-
-        if (isComplete)
-            EmitSignal(SignalName.IconChanged, completeTex);
-        else if (isPinned)
-            EmitSignal(SignalName.IconChanged, pinnedTex);
-        else
-            EmitSignal(SignalName.IconChanged, (Texture2D)null);
-    }
-
-    public void LinkButtonGroup(ButtonGroup buttonGroup)
-    {
-        highlightCheck.ButtonGroup = buttonGroup;
-    }
-
-    public void Press()
-    {
-        highlightCheck.ButtonPressed = true;
-        EmitSignal(SignalName.Pressed);
-    }
-
-    public override void _ExitTree()
-    {
-        foreach (var questData in questSlotList)
-        {
-            questData.LinkQuestItem(null);
-        }
-    }
+	public override void _ExitTree()
+	{
+		foreach (var questData in questSlotList)
+		{
+			questData.LinkQuestItem(null);
+		}
+	}
 }

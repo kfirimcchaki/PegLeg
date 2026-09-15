@@ -1,0 +1,143 @@
+[gd_scene format=3 uid="uid://bi6d0s5f2iadi"]
+
+[ext_resource type="Script" uid="uid://bosi6o0a0u7eb" path="res://Scripts/UserInterface/Dashboard/DashboardSuperchargerController.cs" id="1_yrmkj"]
+[ext_resource type="Script" uid="uid://bm5sma44lxciv" path="res://Scripts/RefreshTimerHook.cs" id="2_0qpvb"]
+[ext_resource type="PackedScene" uid="uid://c5j52ymk713sh" path="res://Scenes/UI/refresh_timer.tscn" id="3_0qpvb"]
+[ext_resource type="Script" uid="uid://dfa7e1y4fpvp2" path="res://Scripts/UserInterface/ListEntries/GameItemEntry.cs" id="3_p3gr0"]
+[ext_resource type="Texture2D" uid="uid://c0n3kv5onb5c2" path="res://Images/InterfaceIcons/BanjoPlaceholders/T-Items-Hero-PromotionCurrency-L.png" id="4_oshko"]
+[ext_resource type="Texture2D" uid="uid://b5f6h8q50sc0x" path="res://Images/InterfaceIcons/T_UI_Checkmark.png" id="5_n0sua"]
+[ext_resource type="PackedScene" uid="uid://2iou6v2uijh8" path="res://Scenes/small_loading_icon.tscn" id="6_0sim4"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yrmkj"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0qpvb"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 6
+
+[node name="DashboardSupercharger" type="PanelContainer" unique_id=971129266 node_paths=PackedStringArray("content", "entry", "noSuperchargerMessage", "checkmark", "loading", "progressBar")]
+custom_minimum_size = Vector2(235, 0)
+size_flags_horizontal = 0
+mouse_filter = 1
+theme_type_variation = &"Panel5PadB"
+script = ExtResource("1_yrmkj")
+content = NodePath("VBoxContainer/PanelContainer/VBoxContainer2")
+entry = NodePath("VBoxContainer/PanelContainer/VBoxContainer2/HBoxContainer")
+noSuperchargerMessage = NodePath("VBoxContainer/PanelContainer/VBoxContainer")
+checkmark = NodePath("VBoxContainer/PanelContainer/TextureRect")
+loading = NodePath("VBoxContainer/PanelContainer/SmallLoadingIcon")
+progressBar = NodePath("VBoxContainer/PanelContainer/VBoxContainer2/ProgressBar")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=255699193]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=78573322]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer" unique_id=471168352]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Supercharger"
+
+[node name="Label2" type="Label" parent="VBoxContainer/HBoxContainer" unique_id=1023995561]
+visible = false
+layout_mode = 2
+text = "xx:xx:xx"
+script = ExtResource("2_0qpvb")
+timerType = 2
+
+[node name="RefreshTimer" parent="VBoxContainer/HBoxContainer" unique_id=112616027 instance=ExtResource("3_0qpvb")]
+layout_mode = 2
+timerType = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=103279688]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_type_variation = &"Panel3Pad"
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=508848432]
+layout_mode = 2
+theme_override_constants/separation = -2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer/VBoxContainer2" unique_id=1311258558]
+layout_mode = 2
+size_flags_vertical = 6
+script = ExtResource("3_p3gr0")
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PanelContainer/VBoxContainer2/HBoxContainer" unique_id=839325591]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+texture = ExtResource("4_oshko")
+expand_mode = 1
+
+[node name="Label" type="Label" parent="VBoxContainer/PanelContainer/VBoxContainer2/HBoxContainer" unique_id=440682040]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hero Superharger"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer/PanelContainer/VBoxContainer2" unique_id=992593718]
+layout_mode = 2
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 12
+theme_override_styles/background = SubResource("StyleBoxFlat_yrmkj")
+theme_override_styles/fill = SubResource("StyleBoxFlat_0qpvb")
+max_value = 1.0
+value = 0.5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1967559320]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer/PanelContainer/VBoxContainer" unique_id=1935892223]
+layout_mode = 2
+text = "No Supercharger Quest"
+horizontal_alignment = 1
+
+[node name="Label" type="Label" parent="VBoxContainer/PanelContainer/VBoxContainer" unique_id=277091701]
+layout_mode = 2
+theme_override_constants/line_spacing = -2
+theme_override_font_sizes/font_size = 12
+text = "Complete the Twine Peaks SSD 10
+to unlock Weekly Supercharger Quests"
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/PanelContainer" unique_id=814410864]
+visible = false
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+texture = ExtResource("5_n0sua")
+expand_mode = 1
+
+[node name="SmallLoadingIcon" parent="VBoxContainer/PanelContainer" unique_id=633748750 instance=ExtResource("6_0sim4")]
+visible = false
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 0
+
+[connection signal="IconChanged" from="VBoxContainer/PanelContainer/VBoxContainer2/HBoxContainer" to="VBoxContainer/PanelContainer/VBoxContainer2/HBoxContainer/TextureRect" method="set_texture"]
+[connection signal="NameChanged" from="VBoxContainer/PanelContainer/VBoxContainer2/HBoxContainer" to="VBoxContainer/PanelContainer/VBoxContainer2/HBoxContainer/Label" method="set_text"]

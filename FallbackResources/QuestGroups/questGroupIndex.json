@@ -1,0 +1,61 @@
+{
+  "questlines":{
+    "displayName": "Questlines",
+    "autoPopulateQuestlines": true
+  },
+  "tutorialQuests":{
+    "displayName": "Tutorial",
+    "content":"tutorialQuests.json"
+  },
+  "birthday":{
+    "displayName": "Birthday Quests",
+    "timer": "Weekly",
+    "content":"birthday.json"
+  },
+  "cramSession":{
+    "displayName": "Cram Session",
+    "timer": "Event",
+    "eventFlags":[
+      "EventFlag.CramSession"
+    ],
+    "content":"cramSession.json"
+  },
+  "dailyQuests":{
+    "displayName": "Daily Quests",
+    "timer": "Daily",
+    "content":"dailyQuests.json"
+  },
+  "weeklyQuests":{
+    "displayName": "Weekly Quests",
+    "timer": "Weekly",
+    "content":"weeklyQuests.json"
+  },
+  "eventQuests":{
+    "displayName": "Event Quests",
+    "timer": "Event",
+    "eventFlags":[
+      "EventFlag.Mayday",
+      "EventFlag.Starlight",
+      "EventFlag.HordeV3",
+      "EventFlag.Season11.Frostnite"
+    ],
+    "content":"eventQuests.json"
+  },
+  "ventureQuests":{
+    "displayName": "Venture Challenge Quests",
+    "timer": "Event",
+    "eventFlags":[
+      "EventFlag.Phoenix.NewBeginnings",
+      "EventFlag.Phoenix.RoadTrip",
+      "EventFlag.Phoenix.Adventure",
+      "EventFlag.Phoenix.Fortnitemares",
+      "EventFlag.Phoenix.Winterfest"
+    ],
+    "content":"ventureQuests.json"
+  },
+  "extraQuests":{
+    "displayName": "Extra Quests",
+    "name": "Extras",
+    "content":"extraQuests.json"
+  }
+}

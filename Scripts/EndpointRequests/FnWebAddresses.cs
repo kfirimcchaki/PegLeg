@@ -1,56 +1,48 @@
 ﻿using System;
-using System.Net.Http;
 
-static class FnWebAddresses
+class FnWebAddresses
 {
-    public static readonly HttpClient service = new()
-    {
-        BaseAddress = new Uri("https://fortnite-public-service-prod11.ol.epicgames.com")
-    };
+	Uri fortService = new("https://fortnite-public-service-prod11.ol.epicgames.com");
+	Uri fortContent = new("https://fortnitecontent-website-prod07.ol.epicgames.com");
+	Uri fortGame = new("https://fngw-mcp-gc-livefn.ol.epicgames.com");
+	Uri epicAccount = new("https://account-public-service-prod.ol.epicgames.com");
+	Uri epicFriends = new("https://friends-public-service-prod.ol.epicgames.com");
+	Uri epicAvatar = new("https://avatar-service-prod.identity.live.on.epicgames.com");
+	Uri epicUserSearch = new("https://user-search-service-prod.ol.epicgames.com");
+	Uri unrealCDN = new("https://cdn2.unrealengine.com");
+	Uri epicParty = new("https://party-service-prod.ol.epicgames.com");
 
-    public static readonly HttpClient content = new()
-    {
-        BaseAddress = new Uri("https://fortnitecontent-website-prod07.ol.epicgames.com")
-    };
+	static FnWebAddresses standardAddresses = new();
+	//static FnWebAddresses testingAddresses = new()
+	//{
+	//    fortService = new(""),
+	//    fortContent = new(""),
+	//    fortGame = new(""),
+	//    epicAccount = new(""),
+	//    epicFriends = new(""),
+	//    epicAvatar = new(""),
+	//    epicUserSearch = new(""),
+	//    unrealCDN = new(""),
+	//    epicParty = new(""),
+	//};
 
-    public static readonly HttpClient game = new()
-    {
-        BaseAddress = new Uri("https://fngw-mcp-gc-livefn.ol.epicgames.com")
-    };
+	static FnWebAddresses ActiveAddresses = standardAddresses;
 
-    public static readonly HttpClient account = new()
-    {
-        BaseAddress = new Uri("https://account-public-service-prod.ol.epicgames.com")
-    };
-
-    public static readonly HttpClient avatar = new()
-    {
-        BaseAddress = new Uri("https://avatar-service-prod.identity.live.on.epicgames.com")
-    };
-
-    public static readonly HttpClient userSearch = new()
-    {
-        BaseAddress = new Uri("https://user-search-service-prod.ol.epicgames.com")
-    };
-
-    public static readonly HttpClient epicCDN = new()
-    {
-        BaseAddress = new Uri("https://cdn2.unrealengine.com")
-    };
+	public static readonly Uri FortService = ActiveAddresses.fortService;
+	public static readonly Uri FortContent = ActiveAddresses.fortContent;
+	public static readonly Uri FortGame = ActiveAddresses.fortGame;
+	public static readonly Uri EpicAccount = ActiveAddresses.epicAccount;
+	public static readonly Uri EpicFriends = ActiveAddresses.epicFriends;
+	public static readonly Uri EpicAvatar = ActiveAddresses.epicAvatar;
+	public static readonly Uri EpicUserSearch = ActiveAddresses.epicUserSearch;
+	public static readonly Uri UnrealCDN = ActiveAddresses.unrealCDN;
+	public static readonly Uri EpicParty = ActiveAddresses.epicParty;
 }
 
-static class ExternalWebAddresses
+class ApiWebAddresses
 {
-    public static readonly HttpClient fnApi = new()
-    {
-        BaseAddress = new Uri("https://fortnite-api.com")
-    };
-    public static readonly HttpClient fnApiJamTrakcs = new()
-    {
-        BaseAddress = new Uri("https://cdn.fortnite-api.com")
-    };
-    public static readonly HttpClient fnCentral = new()
-    {
-        BaseAddress = new Uri("https://fortnitecentral.genxgames.gg")
-    };
+	public static readonly Uri fnDashApi = new("https://fortnite-api.com");
+	public static readonly Uri fnDashApiCdn = new("https://cdn.fortnite-api.com");
+	public static readonly Uri fnDotApi = new("https://api.fortniteapi.com/");
+	public static readonly Uri pegLegLiteBucket = new("https://litedata.peglegfn.com/");
 }

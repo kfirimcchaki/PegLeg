@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://bf0c8n5okf1lh"]
+
+[ext_resource type="Script" uid="uid://rx1wks4gx4sj" path="res://Scripts/SubViewportScreenshotter.cs" id="1_p1mpf"]
+[ext_resource type="PackedScene" uid="uid://ckgomc13aefaq" path="res://Scenes/PegLegWatermark.tscn" id="2_lsfgo"]
+[ext_resource type="PackedScene" uid="uid://bytcic4qvijqc" path="res://Scenes/Desktop/Views/Dashboard/dashboardPowerHourAlert.tscn" id="3_uy6a5"]
+[ext_resource type="Script" uid="uid://bxttbqtu64udk" path="res://Scripts/Publishing/Sources/PowerHourWebhookDispatcher.cs" id="4_uy6a5"]
+[ext_resource type="PackedScene" uid="uid://3xbl5x8mbmjv" path="res://Scenes/GameItemEntry/mission_alert_entry_medium.tscn" id="5_rx40l"]
+
+[node name="ShareablePowerHour" type="SubViewportContainer" unique_id=1004627350]
+offset_right = 709.0
+offset_bottom = 914.0
+size_flags_horizontal = 0
+size_flags_vertical = 8
+
+[node name="PowerHourViewport" type="SubViewport" parent="." unique_id=424942682 node_paths=PackedStringArray("matchSize")]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(1268, 950)
+render_target_update_mode = 4
+script = ExtResource("1_p1mpf")
+matchSize = NodePath("PegLegWatermark")
+
+[node name="PegLegWatermark" parent="PowerHourViewport" unique_id=1716002338 instance=ExtResource("2_lsfgo")]
+offset_right = 393.0
+offset_bottom = 181.0
+scale = Vector2(2, 2)
+size_flags_vertical = 0
+
+[node name="PowerHourAlert" parent="PowerHourViewport/PegLegWatermark" unique_id=878248880 node_paths=PackedStringArray("modifierContainer", "modifierEntryList") instance=ExtResource("3_uy6a5")]
+custom_minimum_size = Vector2(450, 0)
+layout_mode = 2
+useHeadsUpForVisibility = false
+modifierContainer = NodePath("Full/VBoxContainer/VBoxContainer")
+modifierEntryList = [NodePath("Full/VBoxContainer/VBoxContainer/MissionAlertItemEntry7"), NodePath("Full/VBoxContainer/VBoxContainer/MissionAlertItemEntry8")]
+
+[node name="Label2" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/HBoxContainer" parent_id_path=PackedInt32Array(878248880, 267169212) index="2" unique_id=1929342216]
+visible = false
+
+[node name="RefreshTimer" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/HBoxContainer" parent_id_path=PackedInt32Array(878248880, 267169212) index="3" unique_id=112616027]
+visible = false
+
+[node name="ShareBtn" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/HBoxContainer" parent_id_path=PackedInt32Array(878248880, 267169212) index="4" unique_id=1655011011]
+visible = false
+
+[node name="Modifiers" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer" parent_id_path=PackedInt32Array(878248880, 73010128) index="1" unique_id=679697045]
+visible = false
+AutoColWidth = false
+CompressSpacing = false
+
+[node name="MissionAlertItemEntry" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/Modifiers" index="0" unique_id=55775401]
+visible = false
+
+[node name="Description" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/Modifiers/MissionAlertItemEntry/VBoxContainer" parent_id_path=PackedInt32Array(878248880, 55775401, 155602561) index="1" unique_id=603560537]
+visible = true
+
+[node name="MissionAlertItemEntry2" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/Modifiers" index="1" unique_id=1583837197]
+visible = false
+
+[node name="Description" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/Modifiers/MissionAlertItemEntry2/VBoxContainer" parent_id_path=PackedInt32Array(878248880, 1583837197, 155602561) index="1" unique_id=603560537]
+visible = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer" parent_id_path=PackedInt32Array(878248880, 73010128) index="2" unique_id=1574426382]
+layout_mode = 2
+
+[node name="MissionAlertItemEntry7" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/VBoxContainer" unique_id=1251423203 instance=ExtResource("5_rx40l")]
+layout_mode = 2
+
+[node name="Description" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/VBoxContainer/MissionAlertItemEntry7/VBoxContainer" parent_id_path=PackedInt32Array(1251423203, 155602561) index="1" unique_id=603560537]
+visible = true
+
+[node name="MissionAlertItemEntry8" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/VBoxContainer" unique_id=1896686694 instance=ExtResource("5_rx40l")]
+layout_mode = 2
+
+[node name="Description" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/VBoxContainer/MissionAlertItemEntry8/VBoxContainer" parent_id_path=PackedInt32Array(1896686694, 155602561) index="1" unique_id=603560537]
+visible = true
+
+[node name="SpecificTimes" parent="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer" parent_id_path=PackedInt32Array(878248880, 73010128) index="4" unique_id=1824718531]
+visible = false
+
+[node name="PowerHourDispatcher" type="Node" parent="." unique_id=1977899336 node_paths=PackedStringArray("screenshotter")]
+script = ExtResource("4_uy6a5")
+screenshotter = NodePath("../PowerHourViewport")
+
+[editable path="PowerHourViewport/PegLegWatermark/PowerHourAlert"]
+[editable path="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/Modifiers/MissionAlertItemEntry"]
+[editable path="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/Modifiers/MissionAlertItemEntry2"]
+[editable path="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/VBoxContainer/MissionAlertItemEntry7"]
+[editable path="PowerHourViewport/PegLegWatermark/PowerHourAlert/Full/VBoxContainer/VBoxContainer/MissionAlertItemEntry8"]

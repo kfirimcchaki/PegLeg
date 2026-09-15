@@ -1,0 +1,12 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://cwag018nxlpqn"]
+
+[ext_resource type="Shader" uid="uid://s05exwnu1w8b" path="res://Shaders/ShadowImage.gdshader" id="1_71got"]
+
+[resource]
+shader = ExtResource("1_71got")
+shader_parameter/inset = 0.0
+shader_parameter/shade = 0.0
+shader_parameter/shadeAlpha = 1.0
+shader_parameter/base = 0.0
+shader_parameter/scalar = 2.0
+shader_parameter/power = 2.0

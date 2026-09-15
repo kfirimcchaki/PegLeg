@@ -1,0 +1,335 @@
+[gd_scene format=3 uid="uid://bnw6gwdhv8twq"]
+
+[ext_resource type="Script" uid="uid://cdjdgbb3ere1f" path="res://Scripts/Config/ConfigToggleHook.cs" id="1_p4q3c"]
+[ext_resource type="Script" uid="uid://blavw6em7d2ij" path="res://Scripts/Config/ConfigTextHook.cs" id="2_s2kuj"]
+[ext_resource type="Script" uid="uid://bplh0uuyvlse8" path="res://Scripts/Config/ConfigRangeHook.cs" id="3_qiwkn"]
+[ext_resource type="Texture2D" uid="uid://b5f6h8q50sc0x" path="res://Images/InterfaceIcons/T_UI_Checkmark.png" id="4_n30m0"]
+[ext_resource type="Texture2D" uid="uid://do17fpp06a7op" path="res://Images/InterfaceIcons/T_Icon_Sort.png" id="5_83ys4"]
+[ext_resource type="Script" uid="uid://bs11bn308ogp7" path="res://Scripts/Config/ConfigOptionHook.cs" id="6_4u2l4"]
+[ext_resource type="Texture2D" uid="uid://byufr1xhmmhxp" path="res://Images/InterfaceIcons/T-Icon-Unknown-128.png" id="7_4u2l4"]
+
+[node name="MissionPage" type="VBoxContainer" unique_id=2081319794]
+offset_right = 334.0
+offset_bottom = 198.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=257004908]
+visible = false
+layout_mode = 2
+
+[node name="HideMissionLock" type="CheckBox" parent="." unique_id=1387671364]
+layout_mode = 2
+layout_direction = 3
+text = "Hide Lock icon on Missions"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "hide_lock"
+
+[node name="Hide4xXP" type="CheckBox" parent="." unique_id=303758349]
+visible = false
+layout_mode = 2
+layout_direction = 3
+text = "Exclude XP from 4x Rewards"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "excludeLargeXP"
+
+[node name="HideEvoMats" type="CheckBox" parent="." unique_id=832708809]
+layout_mode = 2
+layout_direction = 3
+text = "Exclude Evolution Mats from 4x Panels"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "excludeLargeEvo"
+defaultValue = true
+
+[node name="HideReperk" type="CheckBox" parent="." unique_id=1960580171]
+layout_mode = 2
+layout_direction = 3
+text = "Exclude RE-PERK from 4x Panels"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "excludeLargeReperk"
+
+[node name="HideReperk2" type="CheckBox" parent="." unique_id=305237794]
+layout_mode = 2
+layout_direction = 3
+text = "Exclude Account Resources from All Rewards Panel"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "excludeAccountResourceAll"
+
+[node name="GroupVBucks" type="CheckBox" parent="." unique_id=1911846529]
+layout_mode = 2
+layout_direction = 3
+button_pressed = true
+text = "Group V-Bucks & X-Ray Tickets as Notable"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "groupVBucks"
+defaultValue = true
+
+[node name="GroupLegSurvivors" type="CheckBox" parent="." unique_id=1509784846]
+layout_mode = 2
+layout_direction = 3
+button_pressed = true
+text = "Group Legendary Survivors as Notable"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "groupLegSurvivors"
+defaultValue = true
+
+[node name="SplitGroupStacks" type="CheckBox" parent="." unique_id=865140967]
+layout_mode = 2
+layout_direction = 3
+text = "Split Stacks within Groups"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "split_grouped_stacks"
+
+[node name="FoldableContainer" type="FoldableContainer" parent="." unique_id=93952813]
+layout_mode = 2
+folded = true
+title = "Notable Item Filter (per-account)"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="FoldableContainer" unique_id=141283485]
+visible = false
+layout_mode = 2
+
+[node name="GroupVBucks" type="CheckBox" parent="FoldableContainer/VBoxContainer" unique_id=1185557558]
+visible = false
+layout_mode = 2
+layout_direction = 3
+text = "Simple Filter Mode"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "simpleFilter"
+
+[node name="NotableFilter" type="TextEdit" parent="FoldableContainer/VBoxContainer" unique_id=1383090912]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "eg: Mythic | \"X-Ray Tickets\" | (Legendary Hero)"
+context_menu_enabled = false
+emoji_menu_enabled = false
+wrap_mode = 1
+scroll_fit_content_height = true
+script = ExtResource("2_s2kuj")
+section = "missions"
+key = "notable_mission_filter"
+accountMode = true
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="." unique_id=2141917151]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="DefaultMissionSearchLabel" type="Label" parent="VBoxContainer2" unique_id=134436572]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/line_spacing = 0
+text = "Notable Item Filter (Per Account)"
+
+[node name="NotableItemCap" type="HBoxContainer" parent="." unique_id=1427632394]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="NotableItemCap" unique_id=1815566311]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Max Notable Items  "
+
+[node name="HSlider" type="HSlider" parent="NotableItemCap" unique_id=2065745797]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 30.0
+value = 20.0
+rounded = true
+scrollable = false
+tick_count = 7
+ticks_on_borders = true
+script = ExtResource("3_qiwkn")
+section = "missions"
+key = "notable_count"
+asInt = true
+defaultValue = 20.0
+requireApply = false
+
+[node name="Label2" type="Label" parent="NotableItemCap" unique_id=450573100]
+custom_minimum_size = Vector2(35, 0)
+layout_mode = 2
+text = "20"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Button" type="Button" parent="NotableItemCap" unique_id=1688864720]
+visible = false
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+theme_type_variation = &"LargeButton"
+text = "Apply"
+
+[node name="TextureRect" type="TextureRect" parent="NotableItemCap/Button" unique_id=1030555280]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_n30m0")
+expand_mode = 1
+
+[node name="ShowMissionBackgrounds" type="CheckBox" parent="." unique_id=546791083]
+layout_mode = 2
+layout_direction = 3
+button_pressed = true
+text = "Show mission background images"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "show_background"
+defaultValue = true
+
+[node name="PowerHourHeadsUp" type="HBoxContainer" parent="." unique_id=2095635053]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PowerHourHeadsUp" unique_id=498152369]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_constants/line_spacing = -2
+text = "Power Hour
+Heads-up"
+
+[node name="HSlider" type="HSlider" parent="PowerHourHeadsUp" unique_id=1457914025]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 96.0
+value = 24.0
+rounded = true
+scrollable = false
+tick_count = 9
+ticks_on_borders = true
+script = ExtResource("3_qiwkn")
+section = "missions"
+key = "powerhour_headsup"
+asInt = true
+defaultValue = 24.0
+requireApply = false
+
+[node name="Label2" type="Label" parent="PowerHourHeadsUp" unique_id=825959451]
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+text = "24"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label3" type="Label" parent="PowerHourHeadsUp" unique_id=828577248]
+layout_mode = 2
+text = "hrs"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Button" type="Button" parent="PowerHourHeadsUp" unique_id=1102707573]
+visible = false
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+theme_type_variation = &"LargeButton"
+text = "Apply"
+
+[node name="TextureRect" type="TextureRect" parent="PowerHourHeadsUp/Button" unique_id=136218284]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_n30m0")
+expand_mode = 1
+
+[node name="TodoListSort" type="HBoxContainer" parent="." unique_id=341289366]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="TodoListSort" unique_id=884856865]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Auto sort To-Do list"
+
+[node name="OptionButton" type="OptionButton" parent="TodoListSort" unique_id=370605026]
+custom_minimum_size = Vector2(165, 0)
+layout_mode = 2
+size_flags_stretch_ratio = 2.0
+theme_override_constants/outline_size = 0
+theme_override_constants/icon_max_width = 20
+theme_override_icons/icon = ExtResource("5_83ys4")
+selected = 0
+item_count = 8
+popup/item_0/text = "Manual"
+popup/item_0/id = 0
+popup/item_1/text = "Match Missions"
+popup/item_1/id = 1
+popup/item_2/id = 3
+popup/item_2/separator = true
+popup/item_3/text = "Standard"
+popup/item_3/id = 1337
+popup/item_4/text = "FortniteDB"
+popup/item_4/id = 465
+popup/item_5/text = "Power"
+popup/item_5/id = 160
+popup/item_6/text = "FNDB Power"
+popup/item_6/id = 333
+popup/item_7/text = "FNDB Zone Power"
+popup/item_7/id = 127
+script = ExtResource("6_4u2l4")
+section = "missions"
+key = "todo_sort_mode"
+
+[node name="ShowClickbait" type="CheckBox" parent="." unique_id=1729017766]
+visible = false
+layout_mode = 2
+layout_direction = 3
+button_pressed = true
+text = "Improve Power Hour Alert Visibility"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "ui"
+key = "show_ph_clickbait"
+defaultValue = true
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="." unique_id=1959425577]
+layout_mode = 2
+
+[node name="BeastStyle" type="CheckBox" parent="HBoxContainer2" unique_id=1807019556]
+layout_mode = 2
+size_flags_horizontal = 3
+layout_direction = 3
+text = "Satisfied Client Mode"
+alignment = 2
+script = ExtResource("1_p4q3c")
+section = "missions"
+key = "beast_style"
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer2" unique_id=1389493984]
+custom_minimum_size = Vector2(22, 0)
+layout_mode = 2
+tooltip_text = "Adjusts style elements to make a self proclaimed \"Satisfied Client\" feel more comfortable"
+texture = ExtResource("7_4u2l4")
+expand_mode = 1
+
+[connection signal="AppliedChanged" from="NotableItemCap/HSlider" to="NotableItemCap/Button" method="set_disabled"]
+[connection signal="ConfigValueChanged" from="NotableItemCap/HSlider" to="NotableItemCap/HSlider" method="SetValue"]
+[connection signal="UnappliedLabelChanged" from="NotableItemCap/HSlider" to="NotableItemCap/Label2" method="set_text"]
+[connection signal="pressed" from="NotableItemCap/Button" to="NotableItemCap/HSlider" method="ApplyValue"]
+[connection signal="AppliedChanged" from="PowerHourHeadsUp/HSlider" to="PowerHourHeadsUp/Button" method="set_disabled"]
+[connection signal="ConfigValueChanged" from="PowerHourHeadsUp/HSlider" to="PowerHourHeadsUp/HSlider" method="SetValue"]
+[connection signal="UnappliedLabelChanged" from="PowerHourHeadsUp/HSlider" to="PowerHourHeadsUp/Label2" method="set_text"]
+[connection signal="pressed" from="PowerHourHeadsUp/Button" to="PowerHourHeadsUp/HSlider" method="ApplyValue"]

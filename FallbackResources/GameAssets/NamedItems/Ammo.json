@@ -1,0 +1,197 @@
+{
+  "Ammo:ammodatabottlerockets": {
+    "Type": "Ammo",
+    "Name": "AmmoDataBottleRockets",
+    "DisplayName": "Ammo: Bottle Rocket",
+    "Description": "Bottle Rocket.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodatabottlerockets.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T_Icon_Gadget_BottleRocket.png",
+      "LargePreview": "ExportedImages\\T_Icon_Gadget_BottleRocket.png"
+    }
+  },
+  "Ammo:ammodatabotturret": {
+    "Type": "Ammo",
+    "Name": "AmmoDataBotTurret",
+    "DisplayName": "Ammo : Bot Turret",
+    "Description": "Used to activate BotTurret",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodatabotturret.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\TurretBot.png",
+      "LargePreview": "ExportedImages\\TurretBot.png"
+    }
+  },
+  "Ammo:ammodatabulletsheavy": {
+    "Type": "Ammo",
+    "Name": "AmmoDataBulletsHeavy",
+    "DisplayName": "Ammo: Heavy Bullets",
+    "Description": "Ammo for weapons that use high caliber bullets, typically for slow and powerful weapons. You can carry up to 1000 heavy bullets.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/content/items/ammo/ammodatabulletsheavy.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T_Icon_Ammo_Heavy_256.png",
+      "LargePreview": "ExportedImages\\T_Icon_Ammo_Heavy_256.png"
+    }
+  },
+  "Ammo:ammodatabulletslight": {
+    "Type": "Ammo",
+    "Name": "AmmoDataBulletsLight",
+    "DisplayName": "Ammo: Light Bullets",
+    "Description": "Ammo for weapons that use low caliber bullets. Typically used in weapons with a high rate of fire. You can carry up to 6000 light bullets.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/content/items/ammo/ammodatabulletslight.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T_Icon_Ammo_Light_256.png",
+      "LargePreview": "ExportedImages\\T_Icon_Ammo_Light_256.png"
+    }
+  },
+  "Ammo:ammodatabulletsmedium": {
+    "Type": "Ammo",
+    "Name": "AmmoDataBulletsMedium",
+    "DisplayName": "Ammo: Medium Bullets",
+    "Description": "Ammo for weapons using mid-range caliber bullets, typically with balanced firepower and rate of fire. You can carry up to 4000 medium bullets.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/content/items/ammo/ammodatabulletsmedium.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T_Icon_Ammo_Medium_256.png",
+      "LargePreview": "ExportedImages\\T_Icon_Ammo_Medium_256.png"
+    }
+  },
+  "Ammo:ammodataenergycell": {
+    "Type": "Ammo",
+    "Name": "AmmoDataEnergyCell",
+    "DisplayName": "Ammo: Energy Cell",
+    "Description": "Ammo for weapons that use a power source instead of traditional bullets. You can carry up to 3000 energy cells.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodataenergycell.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T_Icon_Ammo_EnergyCells_256.png",
+      "LargePreview": "ExportedImages\\T_Icon_Ammo_EnergyCells_256.png"
+    }
+  },
+  "Ammo:ammodataexplosive": {
+    "Type": "Ammo",
+    "Name": "AmmoDataExplosive",
+    "DisplayName": "Ammo: Explosive",
+    "Description": "Ammo for weapons with explosives.  Typically used in rocket launchers. You can carry up to 150 explosive ammo.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodataexplosive.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T_Icon_Ammo_Rockets_256.png",
+      "LargePreview": "ExportedImages\\T_Icon_Ammo_Rockets_256.png"
+    }
+  },
+  "Ammo:ammodatafiniteturret": {
+    "Type": "Ammo",
+    "Name": "AmmoDataFiniteTurret",
+    "DisplayName": "Explosive Rounds",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodatafiniteturret.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T-Icon-Special-128.png",
+      "LargePreview": "ExportedImages\\T-Icon-Special-128.png"
+    }
+  },
+  "Ammo:ammodatafraggrenades": {
+    "Type": "Ammo",
+    "Name": "AmmoDataFragGrenades",
+    "DisplayName": "Ammo: Frag Grenades",
+    "Description": "Used to activate Frag Grenade.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/content/items/ammo/ammodatafraggrenades.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\Skill_Soldier_Grenade.png",
+      "LargePreview": "ExportedImages\\Skill_Soldier_Grenade.png"
+    }
+  },
+  "Ammo:ammodatafragments": {
+    "Type": "Ammo",
+    "Name": "AmmoDataFragments",
+    "DisplayName": "Ammo: Fragment Charge",
+    "Description": "Used to activate Fragment Abilities",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/content/items/ammo/ammodatafragments.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T-Items-AmmoDataFragments.png",
+      "LargePreview": "ExportedImages\\T-Items-AmmoDataFragments.png"
+    }
+  },
+  "Ammo:ammodataglowtorch": {
+    "Type": "Ammo",
+    "Name": "AmmoDataGlowTorch",
+    "DisplayName": "GlowTorch",
+    "Description": "Used to light up your base",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodataglowtorch.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\Skill_Soldier_ProximityMine.png",
+      "LargePreview": "ExportedImages\\Skill_Soldier_ProximityMine.png"
+    }
+  },
+  "Ammo:ammodatam80": {
+    "Type": "Ammo",
+    "Name": "AmmoDataM80",
+    "DisplayName": "Ammo: Throwing Stars",
+    "Description": "Used to activate Throwing Stars.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodatam80.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T-Icon-Special-128.png",
+      "LargePreview": "ExportedImages\\T-Icon-Special-128.png"
+    }
+  },
+  "Ammo:ammodataproximitymine": {
+    "Type": "Ammo",
+    "Name": "AmmoDataProximityMine",
+    "DisplayName": "Ammo: Proximity Mine",
+    "Description": "Used to activate  Proximity Mine",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodataproximitymine.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\Skill_Soldier_ProximityMine.png",
+      "LargePreview": "ExportedImages\\Skill_Soldier_ProximityMine.png"
+    }
+  },
+  "Ammo:ammodataproximitymines": {
+    "Type": "Ammo",
+    "Name": "AmmoDataProximityMines",
+    "DisplayName": "Ammo: Proximity Mines",
+    "Description": "Used to activate ProximityMines",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodataproximitymines.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\proximity_mine.png",
+      "LargePreview": "ExportedImages\\proximity_mine.png"
+    }
+  },
+  "Ammo:ammodatashells": {
+    "Type": "Ammo",
+    "Name": "AmmoDataShells",
+    "DisplayName": "Ammo: Shells \u0027n\u0027 Slugs",
+    "Description": "Ammo for weapons that use all types of shells, such as buckshot or slugs. You can carry up to 1200 shells \u0027n\u0027 slugs.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/content/items/ammo/ammodatashells.uasset",
+    "ImagePaths": {
+      "SmallPreview": "ExportedImages\\T_Icon_Ammo_Shells_256.png",
+      "LargePreview": "ExportedImages\\T_Icon_Ammo_Shells_256.png"
+    }
+  },
+  "Ammo:ammodatasmokebomb": {
+    "Type": "Ammo",
+    "Name": "AmmoDataSmokeBomb",
+    "DisplayName": "Ammo: Smoke Bombs",
+    "Description": "Used to activate Smoke Bomb.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodatasmokebomb.uasset"
+  },
+  "Ammo:ammodatathrowingstar": {
+    "Type": "Ammo",
+    "Name": "AmmoDataThrowingStar",
+    "DisplayName": "Ammo: Throwing Stars",
+    "Description": "Used to activate Throwing Stars.",
+    "IsPermanent": true,
+    "AssetPath": "fortnitegame/plugins/gamefeatures/savetheworld/content/items/ammo/ammodatathrowingstar.uasset"
+  }
+}

@@ -1,0 +1,143 @@
+[gd_scene format=3 uid="uid://c70qnky0xyx4w"]
+
+[ext_resource type="Script" uid="uid://bj4gqyg63bw8" path="res://Scripts/UserInterface/ListEntries/MissionCollection.cs" id="1_4v5fq"]
+[ext_resource type="Texture2D" uid="uid://dl05qp6bcrs5c" path="res://Images/InterfaceIcons/T_UI_Icon_Search.png" id="2_ma4gr"]
+[ext_resource type="PackedScene" uid="uid://bekssnfes28vf" path="res://Scenes/MissionEntry/Collection/mission_collection_entry.tscn" id="3_2dnay"]
+[ext_resource type="Texture2D" uid="uid://e4cwrq7lup48" path="res://Images/InterfaceIcons/T-SlotIcon-Add-64-White.png" id="3_neet1"]
+[ext_resource type="Texture2D" uid="uid://up5i4jhi7v1v" path="res://Images/InterfaceIcons/Rating-Icon_48.png" id="4_27twl"]
+[ext_resource type="PackedScene" uid="uid://2iou6v2uijh8" path="res://Scenes/small_loading_icon.tscn" id="4_xict5"]
+[ext_resource type="Script" uid="uid://cdjdgbb3ere1f" path="res://Scripts/Config/ConfigToggleHook.cs" id="5_neet1"]
+[ext_resource type="Script" uid="uid://bcltpw76lalug" path="res://Scripts/UIElements/NewRecycleListContainer.cs" id="9_r6w6s"]
+
+[node name="MissionCollection" type="PanelContainer" unique_id=1352265404 node_paths=PackedStringArray("newMissionListNode", "loadingIcon", "playableFilter", "bulkTodoBtn")]
+custom_minimum_size = Vector2(235, 40)
+offset_right = 235.0
+offset_bottom = 97.0
+mouse_filter = 1
+theme_type_variation = &"Panel3Pad"
+script = ExtResource("1_4v5fq")
+testName = "Name"
+testSearch = "///worker leg !lead"
+newMissionListNode = NodePath("VBoxContainer/Body/RecycleContainer")
+loadingIcon = NodePath("VBoxContainer/Body/SmallLoadingIcon")
+playableFilter = NodePath("VBoxContainer/Header/HBoxContainer/CheckButton")
+bulkTodoBtn = NodePath("VBoxContainer/Header/HBoxContainer/AddToDoBtn")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=595817290]
+layout_mode = 2
+
+[node name="Header" type="MarginContainer" parent="VBoxContainer" unique_id=943993301]
+layout_mode = 2
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Header" unique_id=1750868079]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="VBoxContainer/Header/HBoxContainer" unique_id=796681065]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Collection Name Very Long"
+text_overrun_behavior = 3
+
+[node name="SearchBtn" type="Button" parent="VBoxContainer/Header/HBoxContainer" unique_id=1006947589]
+visible = false
+custom_minimum_size = Vector2(18, 0)
+layout_mode = 2
+theme_type_variation = &"TinyButton"
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Header/HBoxContainer/SearchBtn" unique_id=1910733074]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_ma4gr")
+expand_mode = 1
+
+[node name="AddToDoBtn" type="Button" parent="VBoxContainer/Header/HBoxContainer" unique_id=356092187]
+visible = false
+custom_minimum_size = Vector2(26, 0)
+layout_mode = 2
+tooltip_text = "Add all visible rewards to To-Do List"
+theme_type_variation = &"LargeButton"
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Header/HBoxContainer/AddToDoBtn" unique_id=1306305845]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_neet1")
+expand_mode = 1
+
+[node name="CheckButton" type="CheckButton" parent="VBoxContainer/Header/HBoxContainer" unique_id=1160045743]
+custom_minimum_size = Vector2(26, 0)
+layout_mode = 2
+tooltip_text = "Only show Missions that can be accessed on this account"
+mouse_filter = 1
+theme_type_variation = &"EmptySquareCheckButton"
+button_pressed = true
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Header/HBoxContainer/CheckButton" unique_id=969158772]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_top = 3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_27twl")
+expand_mode = 3
+
+[node name="CheckButton" type="CheckButton" parent="VBoxContainer/Header/HBoxContainer/CheckButton" unique_id=669145984]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 22.0
+mouse_filter = 2
+script = ExtResource("5_neet1")
+section = "missions"
+key = "filter_power_default"
+defaultValue = true
+
+[node name="Body" type="MarginContainer" parent="VBoxContainer" unique_id=1401981871]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SmallLoadingIcon" parent="VBoxContainer/Body" unique_id=1398539103 instance=ExtResource("4_xict5")]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+
+[node name="RecycleContainer" type="Container" parent="VBoxContainer/Body" unique_id=812189577 node_paths=PackedStringArray("blinkRect")]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("9_r6w6s")
+recycleEntryScene = ExtResource("3_2dnay")
+blinkRect = NodePath("../ColorRect")
+spacing = Vector2(5, 2)
+
+[node name="ColorRect" type="ColorRect" parent="VBoxContainer/Body" unique_id=612941277]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+
+[connection signal="NameChanged" from="." to="VBoxContainer/Header/HBoxContainer/Name" method="set_text"]
+[connection signal="pressed" from="VBoxContainer/Header/HBoxContainer/SearchBtn" to="." method="GoToSearch"]
+[connection signal="toggled" from="VBoxContainer/Header/HBoxContainer/CheckButton/CheckButton" to="VBoxContainer/Header/HBoxContainer/CheckButton" method="set_pressed"]

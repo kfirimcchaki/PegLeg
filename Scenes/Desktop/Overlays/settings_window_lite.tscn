@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://dr02ht35ldsgb"]
+
+[ext_resource type="PackedScene" uid="uid://c64d0ejhigaib" path="res://Scenes/Desktop/Overlays/settings_window_base.tscn" id="1_qe3ko"]
+[ext_resource type="PackedScene" uid="uid://ciepy6jqqfr58" path="res://Scenes/ViewElements/Settings/themeSettingsPage.tscn" id="2_5d08f"]
+[ext_resource type="PackedScene" uid="uid://eacy1a5oloeb" path="res://Scenes/ViewElements/Settings/advancedSettingsPageLite.tscn" id="2_j1mv5"]
+[ext_resource type="PackedScene" uid="uid://c5jt6u1d5qp2m" path="res://Scenes/ViewElements/Settings/filterInfoSettingsPage.tscn" id="2_jmwrn"]
+[ext_resource type="PackedScene" uid="uid://caybvmlme7cvs" path="res://Scenes/ViewElements/Settings/interfaceSettingsPageLite.tscn" id="2_qn7k4"]
+[ext_resource type="PackedScene" uid="uid://cnldkl7bl76gf" path="res://Scenes/ViewElements/Settings/archiveSettingsPage.tscn" id="3_0g304"]
+[ext_resource type="PackedScene" uid="uid://4y0pw4m6tes2" path="res://Scenes/ViewElements/Settings/audioSettingsPage.tscn" id="3_qn7k4"]
+[ext_resource type="PackedScene" uid="uid://sfb1cgb07mho" path="res://Scenes/ViewElements/Settings/missionSettingsPageLite.tscn" id="4_6hdik"]
+[ext_resource type="PackedScene" uid="uid://bhp6lw87p4us6" path="res://Scenes/ViewElements/Settings/miscSettingsPageLite.tscn" id="6_lfhmt"]
+[ext_resource type="PackedScene" uid="uid://0ry0nxkc35eg" path="res://Scenes/ViewElements/Settings/accessibilitySettingsPage.tscn" id="9_tjj1d"]
+[ext_resource type="PackedScene" uid="uid://3okusvm1npwp" path="res://Scenes/ViewElements/Settings/updatesSettingsPage.tscn" id="10_lfhmt"]
+[ext_resource type="PackedScene" uid="uid://b8hsqxu7wjoo2" path="res://Scenes/ViewElements/Settings/coreSettingsPage.tscn" id="11_tjj1d"]
+
+[node name="SettingsWindow" unique_id=1744220517 instance=ExtResource("1_qe3ko")]
+
+[node name="InterfacePage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Interface" parent_id_path=PackedInt32Array(1356957304) index="1" unique_id=342944049 instance=ExtResource("2_qn7k4")]
+layout_mode = 2
+
+[node name="ThemePage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Theme" parent_id_path=PackedInt32Array(694641182) index="1" unique_id=641150163 instance=ExtResource("2_5d08f")]
+layout_mode = 2
+
+[node name="AudioPage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Audio" parent_id_path=PackedInt32Array(780730376) index="1" unique_id=548623827 instance=ExtResource("3_qn7k4")]
+layout_mode = 2
+
+[node name="MissionPage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Missions" parent_id_path=PackedInt32Array(1645099196) index="1" unique_id=2081319794 instance=ExtResource("4_6hdik")]
+layout_mode = 2
+
+[node name="MiscPage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Misc" parent_id_path=PackedInt32Array(1420176608) index="1" unique_id=1874196611 instance=ExtResource("6_lfhmt")]
+layout_mode = 2
+
+[node name="FilterInfoPage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Filter Info" parent_id_path=PackedInt32Array(446691890) index="1" unique_id=1214352517 instance=ExtResource("2_jmwrn")]
+layout_mode = 2
+
+[node name="AdvancedPage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Advanced" parent_id_path=PackedInt32Array(789085913) index="1" unique_id=172606478 instance=ExtResource("2_j1mv5")]
+layout_mode = 2
+
+[node name="AccessibilityPage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Accessibility" parent_id_path=PackedInt32Array(183301825) index="1" unique_id=2133152724 instance=ExtResource("9_tjj1d")]
+layout_mode = 2
+
+[node name="PublishingTabVisibility" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Publishing" parent_id_path=PackedInt32Array(187348734) index="0" unique_id=1194858583]
+disabled = true
+disabled = true
+
+[node name="ArchivePage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Archive" parent_id_path=PackedInt32Array(108618715) index="2" unique_id=83322452 instance=ExtResource("3_0g304")]
+layout_mode = 2
+
+[node name="UpdatesPage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Updates" parent_id_path=PackedInt32Array(169247733) index="1" unique_id=454061998 node_paths=PackedStringArray("currentVersionLabel") instance=ExtResource("10_lfhmt")]
+layout_mode = 2
+currentVersionLabel = NodePath("../../../../HBoxContainer/Version")
+
+[node name="CorePage" parent="Control/WindowContents/CenterContainer/HBoxContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsPages/Core" parent_id_path=PackedInt32Array(1107420082) index="1" unique_id=596819378 instance=ExtResource("11_tjj1d")]
+layout_mode = 2
+
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/InterfaceTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/InterfaceTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/ThemeTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/ThemeTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/AudioTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/AudioTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/MissionsTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/MissionsTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/MiscTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/MiscTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/Filter InfoTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/Filter InfoTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/AdvancedTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/AdvancedTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/AccessibilityTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/AccessibilityTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/PublishingTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/PublishingTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/ArchiveTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/ArchiveTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/UpdatesTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/UpdatesTab/MarginContainer/Control" method="set_visible"]
+[connection signal="IsUpdate" from="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/CoreTab" to="Control/WindowContents/CenterContainer/HBoxContainer/SettingsTabs/MarginContainer/MarginContainer/VBoxContainer/CoreTab/MarginContainer/Control" method="set_visible"]

@@ -1,365 +1,345 @@
 using Godot;
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json.Nodes;
 
 public partial class SurvivorLoadoutInterface : Node
 {
-    const string LoadoutKey = "SurvivorLoadouts";
-    [Export]
-    Control unownedAccountLayout;
-    [Export]
-    Control loadoutOptionsLayout;
+	const string LoadoutKey = "SurvivorLoadouts";
+	[Export]
+	Control unownedAccountLayout;
+	[Export]
+	Control loadoutOptionsLayout;
 	[Export]
 	OptionButton loadoutSelector;
 	[Export]
 	Button saveLoadoutButton;
-    [Export]
-    Button loadLoadoutButton;
-    [Export]
-    Button renameLoadoutButton;
-    [Export]
-    Button deleteLoadoutButton;
-    [Export]
-    Button clearSquadButton;
-    [Export(PropertyHint.ArrayType)]
-    SurvivorSquadEntry[] survivorSquads;
+	[Export]
+	Button loadLoadoutButton;
+	[Export]
+	Button renameLoadoutButton;
+	[Export]
+	Button deleteLoadoutButton;
+	[Export]
+	Button clearSquadButton;
+	[Export(PropertyHint.ArrayType)]
+	SurvivorSquadEntry[] survivorSquads;
 
-    GameAccount overrideAccount;
+	GameAccount overrideAccount;
 
-    public override void _Ready()
+	public override void _Ready()
 	{
-        loadoutSelector.ItemSelected += OnLoadoutChanged;
-        saveLoadoutButton.Pressed += OnLoadoutSave;
-        loadLoadoutButton.Pressed += OnLoadoutLoad;
-        renameLoadoutButton.Pressed += OnLoadoutRename;
-        deleteLoadoutButton.Pressed += OnLoadoutDelete;
-        clearSquadButton.Pressed += OnSquadClear;
-        loadoutSelector.Selected = 0;
-        saveLoadoutButton.Disabled = false;
-        loadLoadoutButton.Disabled = true;
-        renameLoadoutButton.Disabled = true;
-        deleteLoadoutButton.Disabled = true;
-        loadoutOptionsLayout.Visible = true;
-        unownedAccountLayout.Visible = false;
+		loadoutSelector.ItemSelected += OnLoadoutChanged;
+		saveLoadoutButton.Pressed += OnLoadoutSave;
+		loadLoadoutButton.Pressed += OnLoadoutLoad;
+		renameLoadoutButton.Pressed += OnLoadoutRename;
+		deleteLoadoutButton.Pressed += OnLoadoutDelete;
+		clearSquadButton.Pressed += OnSquadClear;
+		loadoutSelector.Selected = 0;
+		saveLoadoutButton.Disabled = false;
+		loadLoadoutButton.Disabled = true;
+		renameLoadoutButton.Disabled = true;
+		deleteLoadoutButton.Disabled = true;
+		loadoutOptionsLayout.Visible = true;
+		unownedAccountLayout.Visible = false;
 
-        GameAccount.ActiveAccountChanged += OnActiveAccountChanged;
-        UpdateAccount();
-    }
+		GameAccount.ActiveAccountChanged += OnActiveAccountChanged;
+		UpdateAccount();
+	}
 
-    private void OnActiveAccountChanged()
-    {
-        if (overrideAccount is null)
-            UpdateAccount();
-    }
+	public override void _ExitTree()
+	{
+		GameAccount.ActiveAccountChanged -= OnActiveAccountChanged;
+	}
 
-    public void SetOverrideAccount(GameAccount account = null)
-    {
-        overrideAccount = account;
-        loadoutOptionsLayout.Visible = overrideAccount is null;
-        unownedAccountLayout.Visible = overrideAccount is not null;
-        UpdateAccount();
-    }
+	private void OnActiveAccountChanged()
+	{
+		if (overrideAccount is null)
+			UpdateAccount();
+	}
 
-    void UpdateAccount()
-    {
-        foreach (var squad in survivorSquads)
-        {
-            squad.SetOverrideAccount(overrideAccount);
-        }
-        if (overrideAccount is null)
-        {
-            GenerateOptions();
-            loadoutSelector.Selected = 0;
-        }
-    }
+	public void SetOverrideAccount(GameAccount account = null)
+	{
+		overrideAccount = account;
+		loadoutOptionsLayout.Visible = overrideAccount is null;
+		unownedAccountLayout.Visible = overrideAccount is not null;
+		UpdateAccount();
+	}
 
-    public override void _Process(double delta)
-    {
-        eggTimer -= (float)(delta / Engine.TimeScale);
-    }
+	void UpdateAccount()
+	{
+		foreach (var squad in survivorSquads)
+		{
+			squad.SetOverrideAccount(overrideAccount);
+		}
+		if (overrideAccount is null)
+		{
+			GenerateOptions();
+			loadoutSelector.Selected = 0;
+			OnLoadoutChanged(0);
+		}
+	}
 
-    string loadoutName = null;
+	public override void _Process(double delta)
+	{
+		eggTimer -= (float)(delta / Engine.TimeScale);
+	}
 
-    private void OnLoadoutChanged(long index)
-    {
-        saveLoadoutButton.Disabled = true;
-        loadLoadoutButton.Disabled = true;
-        renameLoadoutButton.Disabled = true;
-        deleteLoadoutButton.Disabled = true;
-        if (index == 0)
-        {
-            saveLoadoutButton.Disabled = false;
-            loadoutName = null;
-        }
-        else if (index >= 2)
-        {
-            saveLoadoutButton.Disabled = false;
-            loadLoadoutButton.Disabled = false;
-            renameLoadoutButton.Disabled = false;
-            deleteLoadoutButton.Disabled = false;
-            loadoutName = loadoutSelector.GetItemText((int)index);
-        }
-    }
+	string loadoutName = null;
 
-    private async void OnLoadoutSave()
-    {
-        if (overrideAccount is not null)
-            return;
-        if(loadoutName is not null)
-        {
-            if (!(await GenericConfirmationWindow.ShowConfirmation(
-                    "Overwrite Loadout?", 
-                    "Overwrite", 
-                    contextText: "The contents of the selected loadout will be overwritten"
-                ) ?? false))
-                return;
-        }
+	private void OnLoadoutChanged(long index)
+	{
+		saveLoadoutButton.Disabled = true;
+		loadLoadoutButton.Disabled = true;
+		renameLoadoutButton.Disabled = true;
+		deleteLoadoutButton.Disabled = true;
+		if (index == 0)
+		{
+			saveLoadoutButton.Disabled = false;
+			loadoutName = null;
+		}
+		else if (index >= 2)
+		{
+			saveLoadoutButton.Disabled = false;
+			loadLoadoutButton.Disabled = false;
+			renameLoadoutButton.Disabled = false;
+			deleteLoadoutButton.Disabled = false;
+			loadoutName = loadoutSelector.GetItemText((int)index);
+		}
+	}
 
-        var account = GameAccount.activeAccount;
-        var loadouts = account.GetLocalData(LoadoutKey)?.AsObject() ?? new();
+	private async void OnLoadoutSave()
+	{
+		if (overrideAccount is not null)
+			return;
+		if (loadoutName is not null)
+		{
+			if (await GenericConfirmationWindow.ShowConfirmation(
+					"Overwrite Loadout?",
+					"Overwrite",
+					contextText: "The contents of the selected loadout will be overwritten"
+			) != true)
+				return;
+		}
 
-        loadoutName ??= await GenericLineEditWindow.ShowLineEdit("Enter Survivor Loadout Name", validator: val =>
-        {
-            if (loadouts.ContainsKey(val))
-                return "A survivor loadout with that name already exists";
-            return string.IsNullOrWhiteSpace(val) ? "" : null;
-        });
+		var account = GameAccount.ActiveAccount;
+		var loadouts = account.GetLocalData(LoadoutKey)?.AsObject() ?? [];
 
-        if (loadoutName is null)
-            return;
+		loadoutName ??= await GenericLineEditWindow.ShowLineEdit("Enter Survivor Loadout Name", validator: val =>
+		{
+			if (loadouts.ContainsKey(val))
+				return "A survivor loadout with that name already exists";
+			return string.IsNullOrWhiteSpace(val) ? "" : null;
+		});
 
-        if (!await account.Authenticate())//show error message?
-            return;
+		if (loadoutName is null)
+			return;
 
-        var allWorkers = (await account.GetProfile(FnProfileTypes.AccountItems).Query())
-            .GetItems("Worker", item => item.attributes.ContainsKey("squad_id"));
+		var allWorkers = (await account.GetProfile(FnProfileTypes.AccountItems).Query())
+			.GetItems("Worker", item => !string.IsNullOrWhiteSpace(item.attributes["squad_id"]?.ToString()));
 
-        var groupedWorkers = allWorkers.GroupBy(item => item.attributes["squad_id"].ToString());
+		var groupedWorkers = allWorkers.GroupBy(item => item.attributes["squad_id"].ToString());
 
-        JsonObject squadsMappings = new();
-        foreach (var workers in groupedWorkers)
-        {
-            var squadArray = new JsonArray();
-            for (int i = 0; i < 8; i++)
-            {
-                squadArray.Add("");
-            }
-            foreach (var item in workers)
-            {
-                squadArray[item.attributes["squad_slot_idx"].GetValue<int>()] = item.uuid;
-            }
-            squadsMappings[workers.Key] = squadArray;
-        }
+		JsonObject squadsMappings = [];
+		foreach (var workers in groupedWorkers)
+		{
+			var squadArray = new JsonArray();
+			for (int i = 0; i < 8; i++)
+			{
+				squadArray.Add("");
+			}
+			foreach (var item in workers)
+			{
+				squadArray[item.attributes["squad_slot_idx"].GetValue<int>()] = item.uuid;
+			}
+			squadsMappings[workers.Key] = squadArray;
+		}
 
-        loadouts ??= new JsonObject();
-        loadouts[loadoutName] = squadsMappings;
+		loadouts ??= [];
+		loadouts[loadoutName] = squadsMappings;
 
-        account.SetLocalData(LoadoutKey, loadouts);
-        GenerateOptions();
-        loadoutSelector.Selected = loadouts.Select(kvp => kvp.Key).ToList().IndexOf(loadoutName) + 2;
-        OnLoadoutChanged(loadoutSelector.Selected);
-    }
+		account.SetLocalData(LoadoutKey, loadouts);
+		GenerateOptions(loadouts.Select(kvp => kvp.Key).ToList().IndexOf(loadoutName));
+	}
 
-    float eggTimer = 0;
-    private async void OnLoadoutLoad()
-    {
-        if (eggTimer > 0 || overrideAccount is not null)
-            return;
+	float eggTimer = 0;
+	private async void OnLoadoutLoad()
+	{
+		if (eggTimer > 0 || overrideAccount is not null)
+			return;
 
-        var account = GameAccount.activeAccount;
+		var account = GameAccount.ActiveAccount;
 
-        var accountItems = account.GetProfile(FnProfileTypes.AccountItems);
-        var allWorkers = accountItems.GetItems("Worker");
-        var slottedWorkers = allWorkers.Where( item => item.attributes.ContainsKey("squad_id"));
-        var workerUUIDs = allWorkers.Select(item => item.uuid).ToList();
-        int missingWorkers = 0;
+		var accountItems = account.GetProfile(FnProfileTypes.AccountItems);
+		var allWorkers = accountItems.GetItems("Worker");
+		//var slottedWorkers = allWorkers.Where( item => item.attributes.ContainsKey("squad_id"));
+		var workerUUIDs = allWorkers.Select(item => item.uuid).ToList();
+		int missingWorkers = 0;
 
-        JsonObject fullLoadout = account.GetLocalData(LoadoutKey)[loadoutName].AsObject();
-        JsonObject flattenedLoadout = new()
-        {
-            ["characterIds"] = new JsonArray(),
-            ["squadIds"] = new JsonArray(),
-            ["slotIndices"] = new JsonArray(),
-        };
-        foreach (var squad in fullLoadout)
-        {
-            var squadArray = squad.Value.AsArray();
-            for (int i = 0; i < squadArray.Count; i++)
-            {
-                string workerKey = squadArray[i].ToString();
+		JsonObject fullLoadout = account.GetLocalData(LoadoutKey)[loadoutName].AsObject();
+		JsonObject flattenedLoadout = new()
+		{
+			["characterIds"] = new JsonArray(),
+			["squadIds"] = new JsonArray(),
+			["slotIndices"] = new JsonArray(),
+		};
+		foreach (var squad in fullLoadout)
+		{
+			if (string.IsNullOrWhiteSpace(squad.Key))
+				continue;
+			var squadArray = squad.Value.AsArray();
+			for (int i = 0; i < squadArray.Count; i++)
+			{
+				string workerKey = squadArray[i].ToString();
 
-                if (workerKey == "")
-                    continue;
+				if (string.IsNullOrWhiteSpace(workerKey))
+					continue;
 
-                if (!workerUUIDs.Contains(workerKey))
-                {
-                    missingWorkers++;
-                    //todo: try to approximate a worker to fill in the blank?
-                    continue;
-                }
+				if (!workerUUIDs.Contains(workerKey))
+				{
+					missingWorkers++;
+					//todo: try to approximate a worker to fill in the blank?
+					continue;
+				}
 
 
-                //if (
-                //    existingWorkers.ContainsKey(workerKey) &&
-                //    existingWorkers[workerKey]["attributes"]["squad_id"].ToString() == squad.Key &&
-                //    existingWorkers[workerKey]["attributes"]["squad_slot_idx"].GetValue<int>() == i
-                //    )
-                //    continue;
+				//if (
+				//    existingWorkers.ContainsKey(workerKey) &&
+				//    existingWorkers[workerKey]["attributes"]["squad_id"].ToString() == squad.Key &&
+				//    existingWorkers[workerKey]["attributes"]["squad_slot_idx"].GetValue<int>() == i
+				//    )
+				//    continue;
 
-                flattenedLoadout["characterIds"].AsArray().Add(workerKey);
-                flattenedLoadout["squadIds"].AsArray().Add(squad.Key);
-                flattenedLoadout["slotIndices"].AsArray().Add(i);
-            }
-        }
+				flattenedLoadout["characterIds"].AsArray().Add(workerKey);
+				flattenedLoadout["squadIds"].AsArray().Add(squad.Key);
+				flattenedLoadout["slotIndices"].AsArray().Add(i);
+			}
+		}
 
-        if (!(await GenericConfirmationWindow.ShowConfirmation(
-                "Apply Loadout?",
-                "Apply",
-                contextText: "Survivors in this loadout will be slotted into their squads",
-                warningText: missingWorkers > 0 ? $"Warning: {missingWorkers} survivor{(missingWorkers > 1 ? "s" : "")} in the loadout could not be found" : null
-            ) ?? false))
-            return;
-        eggTimer = 3;
+		if (!(await GenericConfirmationWindow.ShowConfirmation(
+				"Apply Loadout?",
+				"Apply",
+				contextText: "Survivors in this loadout will be slotted into their squads",
+				warningText: missingWorkers > 0 ? $"Warning: {missingWorkers} survivor{(missingWorkers > 1 ? "s" : "")} in the loadout could not be found" : null
+			) ?? false))
+			return;
+		eggTimer = 3;
 
-        using var _ = LoadingOverlay.CreateToken();
+		using var _ = LoadingOverlay.CreateToken();
+		await accountItems.PerformOperation("UnassignAllSquads", new JsonObject() { ["squadIds"] = new JsonArray([.. survivorSquadIds.Select(s => (JsonNode)s)]) });
+		await accountItems.PerformOperation("AssignWorkerToSquadBatch", flattenedLoadout);
+		await Helpers.WaitForTimer(0.1);
+	}
 
-        if (!await account.Authenticate())
-            return;
+	private async void OnLoadoutRename()
+	{
+		if (overrideAccount is not null)
+			return;
+		var account = GameAccount.ActiveAccount;
+		var loadouts = account.GetLocalData(LoadoutKey).AsObject();
+		string newLoadoutName = await GenericLineEditWindow.ShowLineEdit("Enter Survivor Loadout Name", validator: val =>
+		{
+			if (val == loadoutName)
+				return "...That's already the name of the loadout";
+			if (loadouts.ContainsKey(val))
+				return "A survivor loadout with that name already exists";
+			return string.IsNullOrWhiteSpace(val) ? "" : null;
+		});
 
-        await accountItems.PerformOperation("UnassignAllSquads", new JsonObject() { ["squadIds"] = new JsonArray(survivorSquadIds.Select(s => (JsonNode)s).ToArray()) });
-        await accountItems.PerformOperation("AssignWorkerToSquadBatch", flattenedLoadout);
-        await Helpers.WaitForTimer(0.1);
-    }
+		if (newLoadoutName is null)
+			return;
 
-    private async void OnLoadoutRename()
-    {
-        if (overrideAccount is not null)
-            return;
-        var account = GameAccount.activeAccount;
-        var loadouts = account.GetLocalData(LoadoutKey).AsObject();
-        string newLoadoutName = await GenericLineEditWindow.ShowLineEdit("Enter Survivor Loadout Name", validator: val =>
-        {
-            if (val==loadoutName)
-                return "...That's already the name of the loadout";
-            if (loadouts.ContainsKey(val))
-                return "A survivor loadout with that name already exists";
-            return string.IsNullOrWhiteSpace(val) ? "" : null;
-        });
+		var loadoutInQuestion = loadouts[loadoutName];
+		loadouts.Remove(loadoutName);
+		loadouts.Add(newLoadoutName, loadoutInQuestion);
+		loadoutName = newLoadoutName;
 
-        if (newLoadoutName is null)
-            return;
+		account.SetLocalData(LoadoutKey, loadouts);
+		GenerateOptions(loadouts.Select(kvp => kvp.Key).ToList().IndexOf(loadoutName));
+	}
 
-        var loadoutInQuestion = loadouts[loadoutName];
-        loadouts.Remove(loadoutName);
-        loadouts.Add(newLoadoutName, loadoutInQuestion);
-        loadoutName = newLoadoutName;
+	private async void OnLoadoutDelete()
+	{
+		if (await GenericConfirmationWindow.ShowConfirmation(
+				"Delete Loadout?",
+				"Delete",
+				contextText: "The selected loadout will be deleted",
+				warningText: "This action cannot be undone"
+		) != true)
+			return;
 
-        account.SetLocalData(LoadoutKey, loadouts);
-        GenerateOptions();
-        loadoutSelector.Selected = loadouts.Select(kvp => kvp.Key).ToList().IndexOf(loadoutName) + 2;
-        OnLoadoutChanged(loadoutSelector.Selected);
-    }
+		var account = GameAccount.ActiveAccount;
+		var loadouts = account.GetLocalData(LoadoutKey).AsObject();
 
-    private async void OnLoadoutDelete()
-    {
-        if (!(await GenericConfirmationWindow.ShowConfirmation(
-                "Delete Loadout?", 
-                "Delete", 
-                contextText: "The selected loadout will be deleted",
-                warningText: "This action cannot be undone"
-           ) ?? false))
-            return;
+		loadouts.Remove(loadoutName);
 
-        var account = GameAccount.activeAccount;
-        var loadouts = account.GetLocalData(LoadoutKey).AsObject();
+		account.SetLocalData(LoadoutKey, loadouts);
+		GenerateOptions();
+	}
 
-        loadouts.Remove(loadoutName);
+	static readonly string[] survivorSquadIds =
+	[
+		"squad_attribute_medicine_emtsquad",
+		"squad_attribute_medicine_trainingteam",
+		"squad_attribute_arms_fireteamalpha",
+		"squad_attribute_arms_closeassaultsquad",
+		"squad_attribute_scavenging_scoutingparty",
+		"squad_attribute_scavenging_gadgeteers",
+		"squad_attribute_synthesis_corpsofengineering",
+		"squad_attribute_synthesis_thethinktank",
+	];
 
-        account.SetLocalData(LoadoutKey, loadouts);
-        GenerateOptions();
+	private async void OnSquadClear()
+	{
+		if (await GenericConfirmationWindow.ShowConfirmation(
+				"Clear Squad?",
+				"Clear",
+				contextText: "All slotted survivors in all squads will be unslotted"
+		) != true)
+			return;
+		using var _ = LoadingOverlay.CreateToken();
+		var accountItems = GameAccount.ActiveAccount.GetProfile(FnProfileTypes.AccountItems);
+		await accountItems.PerformOperation("UnassignAllSquads", new JsonObject() { ["squadIds"] = new JsonArray([.. survivorSquadIds.Select(s => (JsonNode)s)]) });
+	}
 
-        loadoutSelector.Selected = 0;
-        OnLoadoutChanged(loadoutSelector.Selected);
-    }
+	void GenerateOptions(int selectedIndex = -1)
+	{
+		loadoutSelector.Clear();
+		loadoutSelector.AddItem("[Create New Loadout]");
+		loadoutSelector.AddSeparator("Loadouts");
+		var loadouts = GameAccount.ActiveAccount.GetLocalData("SurvivorLoadouts")?.AsObject() ?? [];
+		foreach (var kvp in loadouts)
+		{
+			loadoutSelector.AddItem(kvp.Key);
+		}
+		selectedIndex = selectedIndex < 0 ? 0 : selectedIndex + 2;
+		loadoutSelector.Selected = selectedIndex;
+		OnLoadoutChanged(selectedIndex);
+	}
 
-    static readonly string[] survivorSquadIds = new string[]
-    {
-        "squad_attribute_medicine_emtsquad",
-        "squad_attribute_medicine_trainingteam",
-        "squad_attribute_arms_fireteamalpha",
-        "squad_attribute_arms_closeassaultsquad",
-        "squad_attribute_scavenging_scoutingparty",
-        "squad_attribute_scavenging_gadgeteers",
-        "squad_attribute_synthesis_corpsofengineering",
-        "squad_attribute_synthesis_thethinktank",
-    };
+	[Export]
+	Texture2D recycleIcon;
+	[Export]
+	Texture2D collectionIcon;
 
-    private async void OnSquadClear()
-    {
-        if (!(await GenericConfirmationWindow.ShowConfirmation(
-                "Clear Squad?", 
-                "Clear", 
-                contextText: "All slotted survivors in all squads will be unslotted"
-            ) ?? false))
-            return;
-        using var _ = LoadingOverlay.CreateToken();
-        
-        var account = GameAccount.activeAccount;
-        if (!await account.Authenticate())
-            return;
+	static readonly Predicate<GameItem> recycleFilter = item =>
+		item.template.Type is string type && (type == "Worker" || type == "Schematic" || type == "Hero" || type == "Defender") &&
+		!(item.template["IsPermanent"]?.GetValue<bool>() ?? false) &&
+		!item.templateId.Contains("ammo") && !item.templateId.Contains("floor_defender") &&
+		!item.templateId.Contains("player_jump_pad") && !item.templateId.Contains("ingredient");
 
-        var accountItems = await account.GetProfile(FnProfileTypes.AccountItems).Query();
-        var existingWorkers = accountItems.GetItems("Worker", item => item.attributes.ContainsKey("squad_id"));
+	async void DebugRecycle()
+	{
+		using var loadingToken = LoadingOverlay.CreateToken();
+		var accountItems = await GameAccount.ActiveAccount.GetProfile(FnProfileTypes.AccountItems).Query();
 
-        await accountItems.PerformOperation("UnassignAllSquads", new JsonObject() { ["squadIds"] = new JsonArray(survivorSquadIds.Select(s => (JsonNode)s).ToArray()) });
-    }
+		GameItem[] filteredItems = accountItems.GetItems(recycleFilter);
 
-    void GenerateOptions()
-    {
-        loadoutSelector.Clear();
-        loadoutSelector.AddItem("[Create New Loadout]");
-        loadoutSelector.AddSeparator("Loadouts");
-        var loadouts = GameAccount.activeAccount.GetLocalData("SurvivorLoadouts")?.AsObject() ?? new();
-        foreach (var kvp in loadouts)
-        {
-            loadoutSelector.AddItem(kvp.Key);
-        }
-    }
+		loadingToken.Dispose();
 
-    [Export]
-    Texture2D recycleIcon;
-    [Export]
-    Texture2D collectionIcon;
+		var recycleItems = await SimpleItemSelector.OpenMultiSelector(filteredItems, SimpleItemSelector.RecycleConfig);
 
-    static readonly Predicate<GameItem> recycleFilter = item =>
-        item.template.Type is string type && (type == "Worker" || type == "Schematic" || type == "Hero" || type == "Defender") &&
-        !(item.template["IsPermanent"]?.GetValue<bool>() ?? false) &&
-        !item.templateId.Contains("ammo") && !item.templateId.Contains("floor_defender")&&
-        !item.templateId.Contains("player_jump_pad") && !item.templateId.Contains("ingredient");
-
-    async void DebugRecycle()
-    {
-        using var loadingToken = LoadingOverlay.CreateToken();
-
-        var account = GameAccount.activeAccount;
-        if (!await account.Authenticate())
-            return;
-
-        var accountItems = await account.GetProfile(FnProfileTypes.AccountItems).Query();
-
-        GameItem[] filteredItems = accountItems.GetItems(recycleFilter);
-
-        foreach (var item in filteredItems)
-        {
-            await item.SetCollected();
-        }
-
-        loadingToken.Dispose();
-
-        GameItemSelector.Instance.SetRecycleDefaults();
-        var recycleItems = await GameItemSelector.Instance.OpenSelector(filteredItems);
-
-        GD.Print("Items: \n" + recycleItems.Select(item => item.uuid).ToArray().Join("\n"));
-    }
+		GD.Print("Items: \n" + recycleItems.Select(item => item.uuid).ToArray().Join("\n"));
+	}
 }

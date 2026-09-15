@@ -1,0 +1,548 @@
+[gd_scene format=3 uid="uid://ctiwmai7a1o6m"]
+
+[ext_resource type="Script" uid="uid://b6cj12kg8rwbh" path="res://Scripts/TargetResolutionSetter.cs" id="1_n8pm4"]
+[ext_resource type="Script" uid="uid://c2hxn6v6r3mvf" path="res://Scripts/BackgroundController.cs" id="1_ntudf"]
+[ext_resource type="Theme" uid="uid://cnew8v3dvlvgf" path="res://GodotThemes/MobileScrollBarTheme.tres" id="1_qh5c3"]
+[ext_resource type="Texture2D" uid="uid://cafi24mcdg78p" path="res://Images/Wallpapers/FORT_Load_Missions_Outpost.png" id="2_3urd0"]
+[ext_resource type="Script" uid="uid://dvt4k5o8may3h" path="res://Scripts/Audio/AutoButtonSounds.cs" id="2_s4hwi"]
+[ext_resource type="Script" uid="uid://culat840voiin" path="res://Scripts/UIElements/Virtual Tab Bar/VirtualTabBar.cs" id="3_daoea"]
+[ext_resource type="Script" uid="uid://b3iwjw1wn5hoe" path="res://Scripts/RefreshTimerController.cs" id="3_i4kju"]
+[ext_resource type="PackedScene" uid="uid://ckofose8g22n1" path="res://Scenes/Mobile/Views/mobileDashboardView.tscn" id="3_ny4te"]
+[ext_resource type="Script" uid="uid://dibhuhscalt6l" path="res://Scripts/ThemeController.cs" id="4_gscod"]
+[ext_resource type="PackedScene" uid="uid://blolmuuxowxag" path="res://Scenes/Mobile/mobileTab.tscn" id="4_op4bc"]
+[ext_resource type="PackedScene" uid="uid://c3uijhkj8mpwg" path="res://Scenes/UI/TabBar/virtualTabBar.tscn" id="4_rwftf"]
+[ext_resource type="Texture2D" uid="uid://3f5guoaak2tu" path="res://Images/InterfaceIcons/MainTabs/MissionsTab.png" id="5_744sm"]
+[ext_resource type="Texture2D" uid="uid://keamxifwlhd1" path="res://Images/InterfaceIcons/MainTabs/DashboardTab.png" id="5_cocd5"]
+[ext_resource type="PackedScene" uid="uid://bk6022q8aea17" path="res://Scenes/UI/TabBar/virtualTab.tscn" id="5_gnxgq"]
+[ext_resource type="Texture2D" uid="uid://cq3wa75psivkx" path="res://Images/InterfaceIcons/MainTabs/TimelineTab.png" id="6_cocd5"]
+[ext_resource type="Script" uid="uid://dvgcv52c2ve0w" path="res://Scripts/UserInterface/ListEntries/GameAccountEntry.cs" id="7_n6tmv"]
+[ext_resource type="Texture2D" uid="uid://dgli85avjiv43" path="res://Images/InterfaceIcons/MainTabs/CompendiumTab.png" id="7_ny4te"]
+[ext_resource type="Texture2D" uid="uid://cj7awxlqm1to2" path="res://Images/InterfaceIcons/T_UI_Icon_Sidebar_OnlinePlayers.png" id="8_biee7"]
+[ext_resource type="Texture2D" uid="uid://cfx4knco7h1e0" path="res://Images/InterfaceIcons/MainTabs/VenturesTab.png" id="8_cocd5"]
+[ext_resource type="PackedScene" uid="uid://bqaf4782i1jnq" path="res://Scenes/Mobile/Views/mobileMissionsView.tscn" id="8_uljcv"]
+[ext_resource type="Shader" uid="uid://17ec5ugjn0qv" path="res://Shaders/CircleBaseMask.gdshader" id="9_biee7"]
+[ext_resource type="PackedScene" uid="uid://cn6m63dxs3fxy" path="res://Scenes/Mobile/Views/mobileCompendiumView.tscn" id="9_uljcv"]
+[ext_resource type="PackedScene" uid="uid://ba1rkt6tw0lbb" path="res://Scenes/Mobile/Views/mobileVenturesView.tscn" id="10_bhuhy"]
+[ext_resource type="Script" uid="uid://cld6m7s42cv6q" path="res://Scripts/HomebasePowerLevel.cs" id="11_2sjmd"]
+[ext_resource type="Script" uid="uid://1wq8v7f1so0q" path="res://Scripts/AccountRefreshHook.cs" id="11_albn5"]
+[ext_resource type="PackedScene" uid="uid://d8qax8qc6jh8" path="res://Scenes/Mobile/Views/mobileSettingsView.tscn" id="11_uljcv"]
+[ext_resource type="Texture2D" uid="uid://k8jqshvbqkl4" path="res://Images/TextureResources/GradientCircle.tres" id="12_5jecb"]
+[ext_resource type="Texture2D" uid="uid://bugl5pyr0s7op" path="res://Images/InterfaceIcons/FNIconLib/T_UI_IconLibrary_Reset_128.png" id="12_tdxd6"]
+[ext_resource type="Texture2D" uid="uid://up5i4jhi7v1v" path="res://Images/InterfaceIcons/Rating-Icon_48.png" id="13_l5xev"]
+[ext_resource type="PackedScene" uid="uid://cs4uqvp2hvjpe" path="res://Scenes/powerLevelIndicatorV2Large.tscn" id="14_5jecb"]
+[ext_resource type="PackedScene" uid="uid://53fn442ut5dy" path="res://Scenes/Desktop/Overlays/mission_viewer.tscn" id="17_06gui"]
+[ext_resource type="Shader" uid="uid://c5oru18lxnh54" path="res://Shaders/Curtain.gdshader" id="17_bm3s6"]
+[ext_resource type="Texture2D" uid="uid://c8gc2giakfb0e" path="res://Images/InterfaceIcons/Fortnite-Item-Pattern-512.png" id="18_hov7v"]
+[ext_resource type="Texture2D" uid="uid://hljvhk8gc1lw" path="res://Images/BanjoSuppliments/TypeIcons/T-Icon-Survivor-128.png" id="19_k2e4l"]
+[ext_resource type="PackedScene" uid="uid://cwuhp6vco7bb2" path="res://Scenes/Mobile/Views/mobileLlamaView.tscn" id="19_vd53b"]
+[ext_resource type="Script" uid="uid://cf1wi6mkqvf8" path="res://Scripts/ShaderHook.cs" id="19_y7kji"]
+[ext_resource type="Script" uid="uid://dbi4mg37e4bvq" path="res://Scripts/CurtainOpener.cs" id="20_5owy4"]
+[ext_resource type="Texture2D" uid="uid://cs2v3mt4il1o2" path="res://Images/InterfaceIcons/BanjoPlaceholders/T-Soldier-HID-Commando-GunTough-R-T01-L.png" id="20_31c4o"]
+[ext_resource type="PackedScene" uid="uid://bll4pqljsuwh" path="res://Scenes/Mobile/Views/mobileInventoryView.tscn" id="20_qh5c3"]
+[ext_resource type="PackedScene" uid="uid://conb37uu8vbtd" path="res://Scenes/Mobile/Views/mobileAccountSelectorView.tscn" id="22_tdxd6"]
+[ext_resource type="Texture2D" uid="uid://cjtv2aa84wwwr" path="res://Images/InterfaceIcons/T_Icon_Spray_Adjustments_Tab_128.png" id="28_5jecb"]
+[ext_resource type="Texture2D" uid="uid://dgwvyp3xkplbh" path="res://Images/InterfaceIcons/PinataStandardPack-UpgradeWhite.png" id="29_e2uku"]
+[ext_resource type="Texture2D" uid="uid://ckxhyx2n6q3j2" path="res://Images/InterfaceIcons/MainTabs/InventoryTab.png" id="35_7ax35"]
+[ext_resource type="PackedScene" uid="uid://jwpfdhr006rn" path="res://Scenes/Mobile/Overlays/mobileLlamaPreviewOverlay.tscn" id="35_dpkwk"]
+[ext_resource type="PackedScene" uid="uid://b5elx1mhn5ahk" path="res://Scenes/Desktop/Overlays/cardpack_opener_window.tscn" id="36_ppqwt"]
+[ext_resource type="PackedScene" uid="uid://c4lt6qwfc4cou" path="res://Scenes/Desktop/Overlays/loading_overlay.tscn" id="38_60tdr"]
+[ext_resource type="PackedScene" uid="uid://cji2iyaxon6uv" path="res://Scenes/Desktop/Overlays/login_popup.tscn" id="38_qxpsy"]
+[ext_resource type="PackedScene" uid="uid://bj0b3duc8a0co" path="res://Scenes/Mobile/Overlays/mobile_game_item_selector.tscn" id="39_wtfcc"]
+[ext_resource type="PackedScene" uid="uid://b1qu5i4xb4bfr" path="res://Scenes/Mobile/Overlays/mobileGameItemViewer.tscn" id="42_7ax35"]
+[ext_resource type="PackedScene" uid="uid://2okdom0nii2b" path="res://Scenes/Desktop/Overlays/GenericWindows/generic_confirmation_window.tscn" id="43_6xiwr"]
+[ext_resource type="PackedScene" uid="uid://cddyd14hf7dey" path="res://Scenes/Desktop/Overlays/item_upgrade_animation.tscn" id="47_8c7wp"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_biee7"]
+content_margin_left = 3.0
+content_margin_top = 3.0
+content_margin_right = 3.0
+content_margin_bottom = 3.0
+bg_color = Color(0.184314, 0.184314, 0.184314, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.3, 0.3, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 20
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tdxd6"]
+shader = ExtResource("9_biee7")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_albn5"]
+bg_color = Color(0.184314, 0.184314, 0.184314, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.3, 0.3, 1)
+corner_radius_top_left = 15
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+corner_radius_bottom_left = 15
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_d1o0h"]
+shader = ExtResource("17_bm3s6")
+shader_parameter/ControlSize = Vector2(512, 960)
+shader_parameter/ShiftDirection = Vector2(0.5, 0.5)
+shader_parameter/Fit = true
+shader_parameter/Scale = 2.0
+shader_parameter/Speed = 0.05
+shader_parameter/Progress = 0.0
+shader_parameter/ClipOOB = false
+
+[node name="Root" type="Control" unique_id=820721531]
+custom_minimum_size = Vector2(480, 960)
+layout_mode = 3
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_qh5c3")
+
+[node name="NonUI" type="Node" parent="." unique_id=157346374]
+
+[node name="TargetResolution" type="Node" parent="NonUI" unique_id=1857801484 node_paths=PackedStringArray("rootNode")]
+script = ExtResource("1_n8pm4")
+rootNode = NodePath("../..")
+TargetResolution = Vector2i(480, 960)
+forceVertical = true
+
+[node name="AutoButtonSounds" type="Node" parent="NonUI" unique_id=52738007]
+script = ExtResource("2_s4hwi")
+
+[node name="RefreshTimerController" type="Node" parent="NonUI" unique_id=1578217017]
+script = ExtResource("3_i4kju")
+
+[node name="ThemeController" type="Node" parent="NonUI" unique_id=1289370866]
+script = ExtResource("4_gscod")
+
+[node name="BGController" type="Control" parent="." unique_id=1636264713 node_paths=PackedStringArray("bgMain", "bgOverlay")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_ntudf")
+bgMain = NodePath("BG")
+bgOverlay = NodePath("BGFade")
+
+[node name="BG" type="TextureRect" parent="BGController" unique_id=779733665]
+self_modulate = Color(0.5, 0.5, 0.5, 1)
+z_index = -10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_3urd0")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="BGFade" type="TextureRect" parent="BGController" unique_id=602532029]
+modulate = Color(1, 1, 1, 0)
+self_modulate = Color(0.5, 0.5, 0.5, 1)
+z_index = -10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_3urd0")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Content" type="MarginContainer" parent="." unique_id=966273300]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 3
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Content" unique_id=13439998]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="MarginContainer2" type="MarginContainer" parent="Content/VBoxContainer" unique_id=1742814406]
+layout_mode = 2
+theme_override_constants/margin_bottom = 4
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/VBoxContainer/MarginContainer2" unique_id=509989110]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer" unique_id=1037956682]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Panel3PadB"
+theme_override_styles/panel = SubResource("StyleBoxFlat_biee7")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/PanelContainer" unique_id=1811833057]
+layout_mode = 2
+script = ExtResource("7_n6tmv")
+defaultIcon = ExtResource("8_biee7")
+useActiveAccount = true
+
+[node name="Icon" type="TextureRect" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1193935717]
+material = SubResource("ShaderMaterial_tdxd6")
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("20_31c4o")
+expand_mode = 3
+
+[node name="Label" type="Label" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1748553120]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "TomatechGames"
+horizontal_alignment = 1
+text_overrun_behavior = 3
+
+[node name="RefreshBtn" type="Button" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer" unique_id=833399045]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Refresh Account"
+theme_type_variation = &"XLButton"
+script = ExtResource("11_albn5")
+
+[node name="TextureRect" type="TextureRect" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/RefreshBtn" unique_id=1921220812]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("12_tdxd6")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PowerLevel" type="MarginContainer" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer" unique_id=825592559 node_paths=PackedStringArray("homebaseNumberLabel", "homebaseNumberProgressBar")]
+visible = false
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("11_2sjmd")
+homebaseNumberLabel = NodePath("MarginContainer/HBoxContainer/PowerLevelNumber")
+homebaseNumberProgressBar = NodePath("MarginContainer/HBoxContainer/PowerLevelProgressBar")
+tooltipColor = Color(0, 0.537255, 0.729412, 1)
+
+[node name="Panel" type="Panel" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/PowerLevel" unique_id=384875293]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_albn5")
+
+[node name="MarginContainer" type="MarginContainer" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/PowerLevel" unique_id=301126759]
+layout_mode = 2
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/PowerLevel/MarginContainer" unique_id=190449631]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="PowerLevelProgressBar" type="TextureProgressBar" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/PowerLevel/MarginContainer/HBoxContainer" unique_id=297953829]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+value = 0.35
+fill_mode = 4
+nine_patch_stretch = true
+texture_under = ExtResource("12_5jecb")
+texture_progress = ExtResource("12_5jecb")
+tint_under = Color(0.145098, 0.145098, 0.145098, 1)
+tint_progress = Color(0, 0.535333, 0.73, 1)
+
+[node name="TextureRect" type="TextureRect" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/PowerLevel/MarginContainer/HBoxContainer/PowerLevelProgressBar" unique_id=796136428]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -6.0
+offset_top = -6.0
+offset_right = 8.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("13_l5xev")
+expand_mode = 1
+
+[node name="PowerLevelNumber" type="Label" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer/PowerLevel/MarginContainer/HBoxContainer" unique_id=42606941]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+theme_override_constants/line_spacing = 0
+theme_override_font_sizes/font_size = 24
+text = "144"
+horizontal_alignment = 1
+
+[node name="PowerLevelIndicatorV3" parent="Content/VBoxContainer/MarginContainer2/HBoxContainer" unique_id=1953661 instance=ExtResource("14_5jecb")]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Content/VBoxContainer" unique_id=752554821]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/scroll_hint_vertical_color = Color(0.05, 0.05, 0.05, 1)
+vertical_scroll_mode = 4
+
+[node name="TabPages" type="MarginContainer" parent="Content/VBoxContainer/ScrollContainer" unique_id=928596017]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 2
+
+[node name="MobileDashboardView" parent="Content/VBoxContainer/ScrollContainer/TabPages" unique_id=1679969338 instance=ExtResource("3_ny4te")]
+visible = false
+layout_mode = 2
+
+[node name="Missions" parent="Content/VBoxContainer/ScrollContainer/TabPages" unique_id=1973681251 instance=ExtResource("8_uljcv")]
+visible = false
+layout_mode = 2
+
+[node name="Llamas" parent="Content/VBoxContainer/ScrollContainer/TabPages" unique_id=472901908 instance=ExtResource("19_vd53b")]
+visible = false
+layout_mode = 2
+
+[node name="Inventory" parent="Content/VBoxContainer/ScrollContainer/TabPages" unique_id=325556342 instance=ExtResource("20_qh5c3")]
+layout_mode = 2
+theme_override_constants/margin_bottom = 4
+
+[node name="Compendium" parent="Content/VBoxContainer/ScrollContainer/TabPages" unique_id=1419508781 instance=ExtResource("9_uljcv")]
+visible = false
+layout_mode = 2
+
+[node name="Ventures" parent="Content/VBoxContainer/ScrollContainer/TabPages" unique_id=2075361443 instance=ExtResource("10_bhuhy")]
+visible = false
+layout_mode = 2
+
+[node name="Settings" parent="Content/VBoxContainer/ScrollContainer/TabPages" unique_id=1392335631 instance=ExtResource("11_uljcv")]
+visible = false
+custom_minimum_size = Vector2(454, 800)
+layout_mode = 2
+
+[node name="Accounts" parent="Content/VBoxContainer/ScrollContainer/TabPages" unique_id=742899924 instance=ExtResource("22_tdxd6")]
+visible = false
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Content/VBoxContainer" unique_id=1033264984]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_bottom = 3
+
+[node name="SubTabs" parent="Content/VBoxContainer/MarginContainer" unique_id=83260719 instance=ExtResource("4_rwftf")]
+layout_mode = 2
+
+[node name="Tab" parent="Content/VBoxContainer/MarginContainer/SubTabs/HBoxContainer" index="0" unique_id=473421915 instance=ExtResource("5_gnxgq")]
+layout_mode = 2
+size_flags_horizontal = 3
+Mode = -1
+Text = "Notable"
+
+[node name="Tab2" parent="Content/VBoxContainer/MarginContainer/SubTabs/HBoxContainer" index="1" unique_id=260372451 instance=ExtResource("5_gnxgq")]
+layout_mode = 2
+size_flags_horizontal = 3
+Text = "All"
+
+[node name="Tab3" parent="Content/VBoxContainer/MarginContainer/SubTabs/HBoxContainer" index="2" unique_id=196392655 instance=ExtResource("5_gnxgq")]
+layout_mode = 2
+size_flags_horizontal = 3
+Text = "To-Do List"
+
+[node name="Tab4" parent="Content/VBoxContainer/MarginContainer/SubTabs/HBoxContainer" index="3" unique_id=1289353664 instance=ExtResource("5_gnxgq")]
+layout_mode = 2
+size_flags_horizontal = 3
+Mode = 1
+Text = "Summary"
+IsPressed = true
+
+[node name="TabButtons" type="PanelContainer" parent="Content/VBoxContainer" unique_id=1631730921 node_paths=PackedStringArray("virtualTabParent", "useAsTabContainer")]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_type_variation = &"Panel3Pad"
+script = ExtResource("3_daoea")
+virtualTabScene = ExtResource("4_op4bc")
+virtualTabParent = NodePath("ScrollContainer/MarginContainer/HBoxContainer")
+useAsTabContainer = NodePath("../ScrollContainer/TabPages")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Content/VBoxContainer/TabButtons" unique_id=496799824]
+layout_mode = 2
+theme_override_colors/scroll_hint_horizontal_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
+follow_focus = true
+scroll_horizontal = 58
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
+scroll_hint_mode = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="Content/VBoxContainer/TabButtons/ScrollContainer" unique_id=2124378808]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer" unique_id=501107374]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+
+[node name="MobileTab8" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1181839167 instance=ExtResource("4_op4bc")]
+layout_mode = 2
+Text = "Daily Summary"
+Icon = ExtResource("5_cocd5")
+
+[node name="MobileTab" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer/HBoxContainer" unique_id=551792587 instance=ExtResource("4_op4bc")]
+layout_mode = 2
+Text = "Missions"
+Icon = ExtResource("5_744sm")
+
+[node name="MobileTab7" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer/HBoxContainer" unique_id=259564635 instance=ExtResource("4_op4bc")]
+layout_mode = 2
+Text = "Llamas"
+Icon = ExtResource("29_e2uku")
+
+[node name="MobileTab2" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1331393051 instance=ExtResource("4_op4bc")]
+layout_mode = 2
+Text = "Inventory (WIP)"
+Icon = ExtResource("35_7ax35")
+
+[node name="MobileTab3" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer/HBoxContainer" unique_id=617466781 instance=ExtResource("4_op4bc")]
+layout_mode = 2
+Icon = ExtResource("7_ny4te")
+
+[node name="MobileTab4" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1501118905 instance=ExtResource("4_op4bc")]
+layout_mode = 2
+Text = "Ventures"
+Icon = ExtResource("8_cocd5")
+
+[node name="MobileTab5" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1806290702 instance=ExtResource("4_op4bc")]
+layout_mode = 2
+Text = "Settings"
+Icon = ExtResource("28_5jecb")
+
+[node name="MobileTab6" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer/HBoxContainer" unique_id=744745049 instance=ExtResource("4_op4bc")]
+layout_mode = 2
+Text = "Account"
+Icon = ExtResource("19_k2e4l")
+
+[node name="MobileTab9" parent="Content/VBoxContainer/TabButtons/ScrollContainer/MarginContainer/HBoxContainer" unique_id=2082932839 instance=ExtResource("4_op4bc")]
+visible = false
+layout_mode = 2
+Text = "Timeline"
+Icon = ExtResource("6_cocd5")
+
+[node name="OverlayWindows" type="Control" parent="." unique_id=942557787]
+z_index = 30
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MissionViewer" parent="OverlayWindows" unique_id=682005821 instance=ExtResource("17_06gui")]
+visible = false
+z_index = -3
+layout_mode = 1
+offset_left = 0.0
+offset_right = 0.0
+
+[node name="CenterContainer" parent="OverlayWindows/MissionViewer/Control/WindowContents" parent_id_path=PackedInt32Array(682005821, 1567660947) index="0" unique_id=2108655950]
+scale = Vector2(0.75, 0.75)
+pivot_offset_ratio = Vector2(0.5, 0.5)
+
+[node name="ShareBtn" parent="OverlayWindows/MissionViewer/Control/WindowContents/CenterContainer/MissionEntry/MarginContainer/VBoxContainer/MarginContainer/HBoxContainer/VBoxContainer/HBoxContainer" parent_id_path=PackedInt32Array(682005821, 1518777854) index="1" unique_id=685787341]
+visible = false
+
+[node name="LlamaPreviewOverlay" parent="OverlayWindows" unique_id=811059498 instance=ExtResource("35_dpkwk")]
+visible = false
+z_index = -5
+layout_mode = 1
+isUserClosable = true
+
+[node name="CardPackOpenerWindow" parent="OverlayWindows" unique_id=188477796 instance=ExtResource("36_ppqwt")]
+visible = false
+layout_mode = 1
+
+[node name="GameItemSelector" parent="OverlayWindows" unique_id=809701910 instance=ExtResource("39_wtfcc")]
+visible = false
+layout_mode = 1
+
+[node name="GameItemViewer" parent="OverlayWindows" unique_id=1687330932 instance=ExtResource("42_7ax35")]
+visible = false
+layout_mode = 1
+
+[node name="LoginPopup" parent="OverlayWindows" unique_id=1746420847 instance=ExtResource("38_qxpsy")]
+visible = false
+layout_mode = 1
+
+[node name="GenericConfirmationWindow" parent="OverlayWindows" unique_id=870480094 instance=ExtResource("43_6xiwr")]
+visible = false
+layout_mode = 1
+
+[node name="ItemUpgradeAnimation" parent="OverlayWindows" unique_id=1631981925 instance=ExtResource("47_8c7wp")]
+visible = false
+layout_mode = 1
+
+[node name="CenterContainer" parent="OverlayWindows/ItemUpgradeAnimation/Control/WindowContents" parent_id_path=PackedInt32Array(1631981925, 1567660947) index="4" unique_id=169129452]
+scale = Vector2(0.75, 0.75)
+pivot_offset_ratio = Vector2(0.5, 0.5)
+
+[node name="LoadingOverlay" parent="OverlayWindows" unique_id=1763907081 instance=ExtResource("38_60tdr")]
+visible = false
+layout_mode = 1
+
+[node name="Curtain" type="TextureRect" parent="." unique_id=1351154514]
+visible = false
+self_modulate = Color(0.25, 0.25, 0.25, 1)
+z_index = 50
+texture_repeat = 2
+material = SubResource("ShaderMaterial_d1o0h")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("18_hov7v")
+script = ExtResource("19_y7kji")
+syncControlSize = true
+modTime = 8.0
+
+[node name="CurtainOpener" type="Node" parent="Curtain" unique_id=716348370 node_paths=PackedStringArray("curtain")]
+script = ExtResource("20_5owy4")
+curtain = NodePath("..")
+
+[connection signal="IconChanged" from="Content/VBoxContainer/MarginContainer2/HBoxContainer/PanelContainer/HBoxContainer" to="Content/VBoxContainer/MarginContainer2/HBoxContainer/PanelContainer/HBoxContainer/Icon" method="set_texture"]
+[connection signal="NameChanged" from="Content/VBoxContainer/MarginContainer2/HBoxContainer/PanelContainer/HBoxContainer" to="Content/VBoxContainer/MarginContainer2/HBoxContainer/PanelContainer/HBoxContainer/Label" method="set_text"]
+[connection signal="pressed" from="Content/VBoxContainer/MarginContainer2/HBoxContainer/RefreshBtn" to="Content/VBoxContainer/MarginContainer2/HBoxContainer/RefreshBtn" method="RefreshAccount"]
+
+[editable path="Content/VBoxContainer/MarginContainer/SubTabs"]
+[editable path="OverlayWindows/MissionViewer"]
+[editable path="OverlayWindows/MissionViewer/Control/WindowContents/CenterContainer/MissionEntry/PowerLevel/PowerLevelIndicator"]
+[editable path="OverlayWindows/MissionViewer/SubViewportContainer4/XpSummaryViewport/PegLegWatermark/SharedMissionEntry/PowerLevel/PowerLevelIndicator"]
+[editable path="OverlayWindows/ItemUpgradeAnimation"]

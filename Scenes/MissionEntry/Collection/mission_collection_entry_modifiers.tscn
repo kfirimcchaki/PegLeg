@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://clts1hy0l7yuw"]
+
+[ext_resource type="PackedScene" uid="uid://bekssnfes28vf" path="res://Scenes/MissionEntry/Collection/mission_collection_entry.tscn" id="1_hgs56"]
+[ext_resource type="Texture2D" uid="uid://dsvwnhaykngi8" path="res://Images/InterfaceIcons/BanjoPlaceholders/T-Icon-Modifier-Neg-Enemy-OnDmgDealt-MetalCorrosion-64.png" id="2_mwplg"]
+
+[node name="MissionCollectionEntry" unique_id=380401269 instance=ExtResource("1_hgs56")]
+
+[node name="HBoxContainer" parent="." index="1" unique_id=651459051 node_paths=PackedStringArray("alertModifierLayout", "alertModifierParent")]
+alertModifierLayout = NodePath("MarginContainer3")
+alertModifierParent = NodePath("MarginContainer3/HBoxContainer")
+
+[node name="MarginContainer" parent="HBoxContainer" index="0" unique_id=1032401245]
+size_flags_horizontal = 1
+
+[node name="MarginContainer3" type="MarginContainer" parent="HBoxContainer" index="1" unique_id=756618328]
+layout_mode = 2
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 1
+theme_override_constants/margin_bottom = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/MarginContainer3" index="0" unique_id=761667446]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/MarginContainer3/HBoxContainer" index="0" unique_id=32875879]
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("2_mwplg")
+expand_mode = 3
+
+[node name="TextureRect2" type="TextureRect" parent="HBoxContainer/MarginContainer3/HBoxContainer" index="1" unique_id=517928305]
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("2_mwplg")
+expand_mode = 3
+
+[node name="TextureRect3" type="TextureRect" parent="HBoxContainer/MarginContainer3/HBoxContainer" index="2" unique_id=1969625018]
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("2_mwplg")
+expand_mode = 3
+
+[node name="TextureRect4" type="TextureRect" parent="HBoxContainer/MarginContainer3/HBoxContainer" index="3" unique_id=2125934322]
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("2_mwplg")
+expand_mode = 3
+
+[node name="TextureRect5" type="TextureRect" parent="HBoxContainer/MarginContainer3/HBoxContainer" index="4" unique_id=1396271429]
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("2_mwplg")
+expand_mode = 3
+
+[node name="MarginContainer2" parent="HBoxContainer" index="2" unique_id=1782751809]
+size_flags_horizontal = 10
+
+[node name="MissionCollectionHighlightItem3" parent="HBoxContainer/MarginContainer2/Highlights" parent_id_path=PackedInt32Array(838251907) index="2" unique_id=1230469321]
+visible = false
+
+[node name="MissionCollectionHighlightItem4" parent="HBoxContainer/MarginContainer2/Highlights" parent_id_path=PackedInt32Array(838251907) index="3" unique_id=1571990667]
+visible = false

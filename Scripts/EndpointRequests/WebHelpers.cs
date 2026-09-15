@@ -1,0 +1,524 @@
+﻿
+using Godot;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
+using HttpClient = System.Net.Http.HttpClient;
+
+public static class WebHelpers
+{
+	static HttpClient plClient = null;
+	public static HttpClient PLClient
+	{
+		get
+		{
+			if (plClient is not null)
+				return plClient;
+			plClient = new()
+			{
+				Timeout = TimeSpan.FromSeconds(60),
+			};
+			plClient.DefaultRequestHeaders.Add("User-Agent", $"PegLeg/PegLeg-{AppConfig.PegLegVersion}");
+			return plClient;
+		}
+	}
+
+	public class BoundHttpsRequestMessage : HttpRequestMessage
+	{
+		public BoundHttpsRequestMessage() : base() { }
+		public BoundHttpsRequestMessage(HttpClient client, HttpMethod method, Uri uri) : base(method, uri)
+		{
+			BoundClient = client;
+		}
+		public HttpClient BoundClient { get; set; }
+		public GameAccount BoundAccount { get; set; }
+		public bool EOSMode { get; set; }
+		public void SetAuthFromAccount() =>
+			Headers.Authorization = EOSMode ? BoundAccount?.EOSHeader : BoundAccount?.AuthHeader;
+
+		public async Task AuthenticateAccount()
+		{
+			if (EOSMode)
+				await BoundAccount.AuthenticateEOS();
+			else
+				await BoundAccount.Authenticate();
+			SetAuthFromAccount();
+		}
+	}
+
+	public static async Task<bool> Ping(string hostnameOrAddress)
+	{
+		using Ping ping = new();
+		bool success = false;
+		try
+		{
+			var reply = await ping.SendPingAsync(hostnameOrAddress);
+			success = reply.Status == IPStatus.Success;
+		}
+		catch (Exception e)
+		{
+			GD.PrintErr(e);
+		}
+		return success;
+	}
+
+	public static BoundHttpsRequestMessage MakeRequest(this Uri uri, string path, HttpMethod method = null) =>
+		new(PLClient, method ?? HttpMethod.Get, new(uri, path));
+
+	public static BoundHttpsRequestMessage MakeRequest(string uri, HttpMethod method = null) =>
+		new(PLClient, method ?? HttpMethod.Get, new(uri));
+
+	public static T SetAuthorisation<T>(this T msg, AuthenticationHeaderValue auth) where T : HttpRequestMessage
+	{
+		msg.Headers.Authorization = auth;
+		return msg;
+	}
+
+	public static T SetAccount<T>(this T msg, GameAccount account = null, bool useEOS = false) where T : BoundHttpsRequestMessage
+	{
+		account ??= GameAccount.ActiveAccount;
+		msg.BoundAccount = account;
+		msg.EOSMode = useEOS;
+		msg.SetAuthFromAccount();
+		return msg;
+	}
+
+	public static T AddHeader<T>(this T msg, string name, string value) where T : HttpRequestMessage
+	{
+		msg.Headers.Add(name, value);
+		return msg;
+	}
+
+	public static T Accepts<T>(this T msg, params MediaTypeWithQualityHeaderValue[] media) where T : HttpRequestMessage
+	{
+		for (int i = 0; i < media.Length; i++)
+		{
+			msg.Headers.Accept.Add(media[i]);
+		}
+		return msg;
+	}
+
+	public static T AddCosmeticHeader<T>(this T msg) where T : HttpRequestMessage
+	{
+		msg.Headers.Add("x-api-key", Helpers.cosmeticSalsa);
+		return msg;
+	}
+
+	public static T SetFormContent<T>(this T msg, string formContent = "") where T : HttpRequestMessage
+	{
+		msg.Content?.Dispose();
+		msg.Content = new StringContent(formContent, Encoding.UTF8, "application/x-www-form-urlencoded");
+		return msg;
+	}
+	public static T BuildFormContent<T>(this T msg, Func<MultipartFormDataContent, MultipartFormDataContent> formBuilder) where T : HttpRequestMessage
+	{
+		msg.Content?.Dispose();
+		msg.Content = formBuilder([]);
+		return msg;
+	}
+
+	public static T SetContent<T>(this T msg, HttpContent content) where T : HttpRequestMessage
+	{
+		msg.Content?.Dispose();
+		msg.Content = content;
+		return msg;
+	}
+
+	public static MultipartFormDataContent AddStringContent(this MultipartFormDataContent multipartFormContent, string name, string content)
+	{
+		multipartFormContent.Add(new StringContent(content, Encoding.UTF8, "application/text"), name);
+		return multipartFormContent;
+	}
+	public static MultipartFormDataContent AddTextFileContent(this MultipartFormDataContent multipartFormContent, string name, string content, string filename = "content.txt")
+	{
+		multipartFormContent.Add(new StringContent(content, Encoding.UTF8, "application/text"), name, filename);
+		return multipartFormContent;
+	}
+	public static MultipartFormDataContent AddImageContent(this MultipartFormDataContent multipartFormContent, string name, Image content, string filename = "image")
+	{
+		multipartFormContent.Add(new ByteArrayContent(content.SaveWebpToBuffer()), name, filename + ".webp");
+		return multipartFormContent;
+	}
+
+	public static T SetStringContent<T>(this T msg, string stringContent) where T : HttpRequestMessage
+	{
+		msg.Content?.Dispose();
+		msg.Content = new StringContent(stringContent, Encoding.UTF8, "application/text");
+		return msg;
+	}
+
+	public static T SetJsonContent<T>(this T msg, string jsonTextContent = "{}") where T : HttpRequestMessage
+	{
+		msg.Content?.Dispose();
+		msg.Content = new StringContent(jsonTextContent, Encoding.UTF8, "application/json");
+		return msg;
+	}
+
+	public static T SetJsonContent<T>(this T msg, JsonObject jsonContent) where T : HttpRequestMessage
+	{
+		jsonContent ??= [];
+		msg.Content?.Dispose();
+		msg.Content = new StringContent(jsonContent.ToString(), Encoding.UTF8, "application/json");
+		return msg;
+	}
+
+
+
+	public static async Task<HttpResponseMessage> Send(this BoundHttpsRequestMessage msg, bool disposeMsg = true)
+	{
+		if (msg.BoundAccount is not null)
+		{
+			await msg.AuthenticateAccount();
+		}
+		var response = await CloneAndSend(msg, disposeMsg);
+
+		//TODO: configurable retry attempt count
+		for (int i = 0; i < 2; i++)
+		{
+			if (response.StatusCode != HttpStatusCode.ServiceUnavailable)
+				break;
+			//TODO: configurable retry delay
+			await Task.Delay(1000);
+			response = await CloneAndSend(msg, disposeMsg);
+		}
+
+		if (
+			msg.BoundAccount is not null &&
+			!response.IsSuccessStatusCode &&
+			response.Headers.TryGetValues("x-epic-error-code", out var errCode) &&
+			errCode.FirstOrDefault() == "1031"
+		)
+		{
+			GD.Print("token invalid, expiring token and retrying with new token...");
+			msg.BoundAccount.ForceExpireToken();
+			await msg.AuthenticateAccount();
+			response = await CloneAndSend(msg, disposeMsg);
+		}
+		msg.Dispose();
+		return response;
+	}
+
+	static async Task<HttpResponseMessage> CloneAndSend(BoundHttpsRequestMessage msg, bool disposeMsg) =>
+		await (await msg.CloneMessageAsync()).SendTo(msg.BoundClient, disposeMsg);
+
+	public static async Task<T> CloneMessageAsync<T>(this T req) where T : HttpRequestMessage, new()
+	{
+		T clone = new()
+		{
+			Method = req.Method,
+			RequestUri = req.RequestUri
+		};
+
+		// Copy the request's content (via a MemoryStream) into the cloned object
+		var ms = new MemoryStream();
+		if (req.Content != null)
+		{
+			await req.Content.CopyToAsync(ms).ConfigureAwait(false);
+			ms.Position = 0;
+			clone.Content = new StreamContent(ms);
+
+			// Copy the content headers
+			foreach (var h in req.Content.Headers)
+				clone.Content.Headers.Add(h.Key, h.Value);
+		}
+
+		clone.Version = req.Version;
+
+		foreach (KeyValuePair<string, object> option in req.Options)
+			clone.Options.Set(new HttpRequestOptionsKey<object>(option.Key), option.Value);
+
+		foreach (KeyValuePair<string, IEnumerable<string>> header in req.Headers)
+			clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+		return clone;
+	}
+
+	public static async Task<HttpResponseMessage> SendTo(this HttpRequestMessage msg, HttpClient client, bool disposeMsg = true)
+	{
+		try
+		{
+			var r = await client.SendAsync(msg);
+			if (disposeMsg)
+				msg.Dispose();
+			return r;
+		}
+		catch (HttpRequestException ex)
+		{
+			var accountURI = FnWebAddresses.EpicAccount;
+			if (ex.Message.StartsWith("No such host is known "))
+			{
+				GD.Print("HttpRequest Ex");
+			}
+			GD.Print("TODO: Investigate this");
+			throw;
+		}
+		catch (SocketException ex)
+		{
+			var accountURI = FnWebAddresses.EpicAccount;
+			if (ex.Message.StartsWith("No such host is known "))
+			{
+				GD.Print("Socket Ex");
+			}
+			GD.Print("TODO: Investigate this");
+			throw;
+		}
+		catch (TaskCanceledException ex)
+		{
+			GD.Print("Request Timed Out");
+			return new HttpResponseMessage() { StatusCode = HttpStatusCode.GatewayTimeout };
+		}
+	}
+
+	public class DownloadProgressHandle : IProgress<(long, long)>
+	{
+		public event Action OnProgress;
+		long curVal;
+		long maxVal;
+		public long CurrentValue => curVal;
+		public float ProgressPercent => (float)(maxVal > 0 ? (curVal * 100.0) / maxVal : 0);
+		public long MaxValue => maxVal;
+		public void Report((long, long) value)
+		{
+			curVal = value.Item1;
+			maxVal = value.Item2;
+			OnProgress?.Invoke();
+		}
+	}
+
+	public static ActionProgress AsProgress(this Action<long, long> action) => new(action);
+	public class ActionProgress(Action<long, long> action) : IProgress<(long, long)>
+	{
+		public void Report((long, long) tuple) => action?.Invoke(tuple.Item1, tuple.Item2);
+	}
+
+	public static async Task SendAsDownload(this BoundHttpsRequestMessage msg, Stream dest, IProgress<(long, long)> progress = null, CancellationToken ct = default)
+	{
+		using var response = await msg.SendAsDownloadR(dest, progress, ct);
+	}
+
+	public static async Task<HttpResponseMessage> SendAsDownloadR(this BoundHttpsRequestMessage msg, Stream dest, IProgress<(long, long)> progress = null, CancellationToken ct = default)
+	{
+		var response = await msg.BoundClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, ct);
+		var contentLength = response.Content.Headers.ContentLength;
+
+		using var download = await response.Content.ReadAsStreamAsync(ct);
+
+		// Ignore progress reporting when no progress reporter was 
+		// passed or when the content length is unknown
+		if (progress == null || !contentLength.HasValue)
+		{
+			await download.CopyToAsync(dest, ct);
+			return response;
+		}
+
+		// Convert absolute progress (bytes downloaded) into relative progress (0% - 100%)
+		var relativeProgress = new Progress<long>(totalBytes => progress.Report((totalBytes, contentLength.Value)));
+		// Use extension method to report progress while downloading
+		await download.CopyToAsync(dest, 81920, relativeProgress, ct);
+		progress.Report((contentLength.Value, contentLength.Value));
+		return response;
+	}
+
+	public static Task<JsonNode> ReadJson(this HttpResponseMessage response) =>
+		response.ReadJson<JsonNode>();
+
+	public static Task<T> ReadJson<T>(this HttpResponseMessage response, JsonSerializerOptions options = null)
+	{
+		if (response.Content?.Headers?.ContentType?.MediaType != "application/json")
+			return Task.FromResult<T>(default);
+		return response.Content.ReadFromJsonAsync<T>(options);
+	}
+
+	public static async Task<Image> ReadImage(this HttpResponseMessage response) => (await response.ReadImageWithBuffer()).image;
+	public static async Task<(Image image, byte[] buffer, string imageType)> ReadImageWithBuffer(this HttpResponseMessage response)
+	{
+		var mediaType = response.Content?.Headers?.ContentType?.MediaType;
+		if (!mediaType.StartsWith("image/"))
+			return (null, null, null);
+		string subtype = mediaType.Split("/")[1];
+		Image image = new();
+		var buffer = await response.Content.ReadAsByteArrayAsync();
+		Error status = subtype switch
+		{
+			"jpeg" => image.LoadJpgFromBuffer(buffer),
+			"png" => image.LoadPngFromBuffer(buffer),
+			"webp" => image.LoadWebpFromBuffer(buffer),
+			_ => Error.CantOpen
+		};
+		if (status != Error.Ok)
+			return (null, null, null);
+		return (image, buffer, subtype);
+	}
+	public static async Task<(Image image, byte[] buffer)> ReadDownloadImage(this HttpResponseMessage response, MemoryStream stream)
+	{
+		var mediaType = response.Content?.Headers?.ContentType?.MediaType;
+		if (!mediaType.StartsWith("image/"))
+			return (null, null);
+		string subtype = mediaType.Split("/")[1];
+		Image image = new();
+		
+		var buffer = stream.ToArray();
+		Error status = subtype switch
+		{
+			"jpeg" => image.LoadJpgFromBuffer(buffer),
+			"png" => image.LoadPngFromBuffer(buffer),
+			"webp" => image.LoadWebpFromBuffer(buffer),
+			_ => Error.CantOpen
+		};
+		if (status != Error.Ok)
+			return (null, null);
+		return (image, buffer);
+	}
+
+	public record struct ErrorContext(HttpResponseMessage response, int epicErrorCode, JsonNode errorContent);
+	public static async Task<bool> CheckForError(this HttpResponseMessage response, bool showErrorPopup = false, bool logError = true) =>
+		(await response.CheckForErrorJson(showErrorPopup, logError)).didError;
+	public static async Task<bool> CheckForError(this HttpResponseMessage response, Func<ErrorContext, bool> logErrorPredicate, bool showErrorPopup = false) =>
+		(await response.CheckForErrorJson(logErrorPredicate, showErrorPopup)).didError;
+
+	public static async Task<(bool didError, JsonNode errorContents)> CheckForErrorJson(this HttpResponseMessage response, bool logError = true, bool showErrorPopup = false) =>
+		await response.CheckForErrorJson(_ => logError, showErrorPopup);
+	public static async Task<(bool didError, JsonNode errorContents)> CheckForErrorJson(this HttpResponseMessage response, Func<ErrorContext, bool> logErrorPredicate, bool showErrorPopup = false)
+	{
+		if (response.IsSuccessStatusCode)
+			return (false, null);
+		GameAccount boundAccount = null;
+		if (response.RequestMessage is BoundHttpsRequestMessage boundMsg)
+			boundAccount = boundMsg.BoundAccount;
+
+		response.Headers.TryGetEpicErrorCode(out var epicErrCode);
+		response.Headers.TryGetEpicErrorMsg(out var fallbackErrorName);
+
+		JsonNode errorContent = null;
+		try
+		{
+			errorContent = await response.ReadJson();
+		}
+		catch (ObjectDisposedException)
+		{
+			GD.Print("error response disposed");
+		}
+
+		bool logError = logErrorPredicate?.Invoke(new(response, epicErrCode, errorContent)) == true;
+		switch (epicErrCode)
+		{
+			case 1031:
+				GD.Print("token invalid, expiring token");
+				boundAccount?.ForceExpireToken();
+				logError = false;
+				showErrorPopup = false;
+				break;
+			case 1012: //waiting for link code to complete, error should be silent
+			case 18130 //attempting to delete nonexistant device, error should be silent
+				when response.RequestMessage.Method == HttpMethod.Delete:
+				logError = false;
+				showErrorPopup = false;
+				break;
+		}
+
+		if (logError)
+		{
+			string logMsg = $"Web Request Error when sending {response?.RequestMessage?.Method} to {response?.RequestMessage?.RequestUri}{(boundAccount is null ? "" : $" as {boundAccount.DisplayName}")}";
+			logMsg += $"\nStatusCode: {(int)(response?.StatusCode ?? HttpStatusCode.Gone)}, ReasonPhrase: {response?.ReasonPhrase}";
+			if (errorContent is not null)
+				logMsg += $"\nContent: \n{errorContent.ToJsonString()}";
+			else if (fallbackErrorName is not null)
+				logMsg += $"\nEpic Error Name: {fallbackErrorName}";
+			logMsg = logMsg.FixNewlines();
+			GD.PrintRich($"[color=orange]{logMsg}[/color]");
+			if (OS.HasFeature("editor"))
+				GD.PushWarning(logMsg);
+		}
+
+		if (showErrorPopup)
+		{
+			GenericConfirmationWindow.ShowConfirmation(
+				"Uh oh! Something Goofed",
+				"Continue",
+				contextText:
+					errorContent?["errorMessage"]?.ToString() ??
+					response.ReasonPhrase ??
+					"An uncaught web error occured",
+				warningText:
+					errorContent?["errorCode"]?.ToString() ??
+					fallbackErrorName ??
+					response.StatusCode.ToString(),
+				allowCancel: false
+			).StartTask();
+		}
+
+		return (true, errorContent);
+	}
+}
+
+public static class WebExtensions
+{
+	extension(HttpResponseHeaders responseHeaders)
+	{
+		public bool TryGetEpicErrorCode(out int errCode)
+		{
+			errCode = -1;
+			return responseHeaders.TryGetValues("x-epic-error-code", out var epicErrCodeContainer) && int.TryParse(epicErrCodeContainer.FirstOrDefault(), out errCode);
+		}
+
+		public bool TryGetEpicErrorMsg(out string errMsg)
+		{
+			errMsg = responseHeaders.TryGetValues("x-epic-error-code", out var epicErrCodeContainer) ? epicErrCodeContainer.FirstOrDefault() : null;
+			return errMsg is not null;
+		}
+	}
+}
+
+//todo: this could be automated with codegen?
+public static class WebMedia
+{
+	public static MediaTypeWithQualityHeaderValue Any { get; private set; } = new("*/*");
+	public static class Application
+	{
+		static string baseType = "application";
+		public static MediaTypeWithQualityHeaderValue Any { get; private set; } = new(baseType + "/*");
+		public static MediaTypeWithQualityHeaderValue Json { get; private set; } = new(baseType + "/json");
+	}
+	public static class Image
+	{
+		static string baseType = "image";
+		public static MediaTypeWithQualityHeaderValue Any { get; private set; } = new(baseType + "/*");
+		public static MediaTypeWithQualityHeaderValue Png { get; private set; } = new(baseType + "/png");
+		public static MediaTypeWithQualityHeaderValue Jpeg { get; private set; } = new(baseType + "/jpeg");
+		public static MediaTypeWithQualityHeaderValue Webp { get; private set; } = new(baseType + "/webp");
+	}
+	public static class Text
+	{
+		static string baseType = "text";
+		public static MediaTypeWithQualityHeaderValue Any { get; private set; } = new(baseType + "/*");
+		public static MediaTypeWithQualityHeaderValue Plain { get; private set; } = new(baseType + "/plain");
+		public static MediaTypeWithQualityHeaderValue Csv { get; private set; } = new(baseType + "/csv");
+		public static MediaTypeWithQualityHeaderValue Html { get; private set; } = new(baseType + "/html");
+	}
+	public static class Video
+	{
+		static string baseType = "video";
+		public static MediaTypeWithQualityHeaderValue Any { get; private set; } = new(baseType + "/*");
+		public static MediaTypeWithQualityHeaderValue Mp4 { get; private set; } = new(baseType + "/mp4");
+		public static MediaTypeWithQualityHeaderValue Webm { get; private set; } = new(baseType + "/webm");
+	}
+	public static class Multipart
+	{
+		static string baseType = "multipart";
+		public static MediaTypeWithQualityHeaderValue Any { get; private set; } = new(baseType + "/*");
+		public static MediaTypeWithQualityHeaderValue FormData { get; private set; } = new(baseType + "/form-data");
+	}
+}
+

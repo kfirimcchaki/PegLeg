@@ -2,256 +2,605 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Text.Json.Nodes;
 
-public partial class MissionRewardsController : Control, IRecyclableElementProvider<MissionRewardPair>
+public partial class MissionRewardsController : Control, IRecyclableElementProvider<MissionRewardPair>, IListProvider<MissionRewardPair>
 {
-    [Export]
-    RecycleListContainer missionList;
-    [Export]
-    Control loadingIcon;
-    [Export]
-    Button sortByPower;
-    [Export]
-    bool notableMode;
+	[Signal]
+	public delegate void HasVBucksEventHandler(bool value);
+	[Export]
+	bool notableMode;
+	[Export]
+	bool excludeTodo;
+	[Export]
+	RecycleListContainer missionList;
+	[Export]
+	Node newMissionListNode;
+	[Export]
+	Control loadingIcon;
+	[Export]
+	LineEdit searchBar;
+	[Export]
+	LineEdit itemSearchBar;
+	[Export]
+	OptionButton sortMode;
+	[Export]
+	Button filterNotable;
+	[Export]
+	Button filterPower;
+	[Export]
+	Control filterPowerContainer;
+	[Export]
+	Button filterStory;
+	[Export]
+	Control emptyContent;
+	[Export]
+	TextureRect emptyIcon;
+	[Export]
+	Button multiFilterToggle;
+	[Export]
+	Button bulkTodoBtn;
 
-    [Export]
+	[Export]
 	CheckButton[] rarityFilters;
-    [Export]
-    CheckButton[] zoneFilters;
-    [Export]
-    CheckButton[] typeFilters;
+	[Export]
+	CheckButton[] zoneFilters;
+	[Export]
+	CheckButton[] typeFilters;
+	[Export]
+	SpecificMissionRewardController[] excludeRewards;
 
-    [Export]
-    CheckButton[] repeatabilityFilters;
+	[Export]
+	CheckButton[] repeatabilityFilters;
 
-    CheckButton[] allFilters;
+	CheckButton[] allFilters;
 
-    List<MissionRewardPair> rewards = new();
+	List<MissionRewardPair> todoRewards = [];
+	List<MissionRewardPair> rewards = [];
+
+	IList<MissionRewardPair> IListProvider<MissionRewardPair>.List => rewards;
 
 
-    public MissionRewardPair GetRecycleElement(int index) => index>=0 && index<rewards.Count ? rewards[index] : default;
+	public MissionRewardPair GetRecycleElement(int index) => index >= 0 && index < rewards.Count ? rewards[index] : default;
 
-    public int GetRecycleElementCount() => rewards.Count;
+	public int GetRecycleElementCount() => rewards.Count;
 
-    public async void ReloadMissions()
-    {
-        await GameMission.UpdateMissions();
-    }
-
-    public override async void _Ready()
+	public async void ReloadMissions()
 	{
-        missionList.SetProvider(this);
-        allFilters = rarityFilters.Union(zoneFilters).Union(typeFilters).Where(f => f is not null).ToArray();
-        foreach (var filter in allFilters)
-        {
-            var current = filter;
-            current.Toggled += newVal =>
-            {
-                if (lockFilter)
-                    return;
-                if (!Input.IsKeyPressed(Key.Shift) && newVal)
-                    TurnOffOtherFilters(current);
-                FilterMissions();
-            };
-        }
-        if (sortByPower is not null)
-            sortByPower.Toggled += _ => FilterMissions();
-        foreach (var filter in repeatabilityFilters)
-        {
-            if (lockFilter)
-                return;
-            filter.Toggled += _ => FilterMissions();
-        }
-        GameMission.OnMissionsUpdated += FilterMissions;
-        GameMission.OnMissionsInvalidated += ClearMissions;
-        VisibilityChanged += TryRefresh;
-        await GameMission.UpdateMissions();
-    }
+		//if (Input.IsKeyPressed(Key.Shift))
+		//{
+		//    await GameMission.ReparseMissions();
+		//}
+		//else
+		await GameMission.UpdateMissions();
+	}
 
-    public override void _ExitTree()
-    {
-        GameMission.OnMissionsUpdated -= FilterMissions;
-        GameMission.OnMissionsInvalidated -= ClearMissions;
-    }
+	IListHandler newMissionList;
+	public override void _Ready()
+	{
+		excludeRewards ??= [];
+		missionList?.SetProvider(this);
+		if(newMissionListNode is IListHandler newListHandler)
+		{
+			newMissionList = newListHandler;
+			newMissionList.LinkListProvider(this);
+		}
+		allFilters = rarityFilters.Union(zoneFilters).Union(typeFilters).Where(f => f is not null).ToArray();
+		SetupFilters(rarityFilters);
+		SetupFilters(zoneFilters);
+		SetupFilters(typeFilters);
 
-    public void TurnOffFilters()
-    {
-        TurnOffOtherFilters(null);
-        lockFilter = true;
-        foreach (var filter in repeatabilityFilters)
-        {
-            filter.ButtonPressed = false;
-        }
-        lockFilter = false;
-        FilterMissions();
-    }
+		sortMode?.ItemSelected += _ => FilterMissions();
+		filterPower?.Toggled += _ => FilterMissions();
+		filterNotable?.Toggled += _ => FilterMissions();
+		filterPowerContainer?.Visible = GameAccount.ActiveAccount.isOwned;
+		filterStory?.Toggled += _ => FilterMissions();
+		searchBar?.TextChanged += _ => UpdateSearch();
+		itemSearchBar?.TextChanged += _ => UpdateSearch();
+		bulkTodoBtn?.Pressed += BulkAddToDoList;
 
-    bool lockFilter = false;
+		foreach (var filter in repeatabilityFilters)
+		{
+			if (lockFilter)
+				return;
+			filter.Toggled += _ => FilterMissions();
+		}
+		GameMission.OnMissionsUpdated += FilterMissions;
+		GameMission.OnMissionsInvalidated += ClearMissions;
+		GameAccount.ActiveAccountChanged += OnAccountChanged;
+		GameAccount.RemindersChanged += FilterMissions;
+		GameAccount.LocalDataChanged += OnAccountDataChanged;
+		MissionToDoListController.OnToDoListChanged += FilterMissions;
+		AppConfig.OnConfigChanged += OnConfigChanged;
+		VisibilityChanged += TryRefresh;
+		FilterMissions();
+	}
 
-    void TurnOffOtherFilters(CheckButton exceptThis)
-    {
-        lockFilter = true;
-        foreach (var filter in allFilters)
-        {
-            if (filter == exceptThis)
-                continue;
-            filter.ButtonPressed = false;
-        }
-        lockFilter = false;
-    }
+	public override void _ExitTree()
+	{
+		MissionToDoListController.OnToDoListChanged -= FilterMissions;
+		GameMission.OnMissionsUpdated -= FilterMissions;
+		GameMission.OnMissionsInvalidated -= ClearMissions;
+		GameAccount.ActiveAccountChanged -= OnAccountChanged;
+		GameAccount.RemindersChanged -= FilterMissions;
+		GameAccount.LocalDataChanged -= OnAccountDataChanged;
+		AppConfig.OnConfigChanged -= OnConfigChanged;
+	}
 
-    bool IsNotable(GameItem item)
-    {
-        var template = item.sortingTemplate;
-        if (template.RarityLevel == 6 && template.Type == "Worker")
-            return true; // mythic leads
-        if (template.VBucksOrXRayTickets)
-            return true; // v-bucks
-        if (template.TemplateId == "AccountResource:voucher_cardpack_bronze")
-            return true; // upgrade llamas
-        if (template.RarityLevel == 5 && template.Type == "Worker" && template.SubType is null)
-            return true; // legendary survivor (excl. leads)
-        return false;
-    }
+	private void OnAccountDataChanged(string key)
+	{
+		if (key == "notable_mission_filter" && notableMode)
+			FilterMissions();
+	}
 
-    void TryRefresh()
-    {
-        if (needsRefresh)
-            FilterMissions();
-    }
+	private void OnAccountChanged()
+	{
+		filterPowerContainer?.Visible = GameAccount.ActiveAccount.isOwned;
+		FilterMissions();
+	}
 
-    bool needsRefresh = false;
-    CancellationTokenSource filterCTS = new();
-    async void FilterMissions()
-    {
-        var missions = GameMission.currentMissions;
-        if (lockFilter || missions is null)
-            return;
-        if (!IsVisibleInTree())
-        {
-            needsRefresh = true;
-            return;
-        }
-        needsRefresh = false;
-        filterCTS.CancelAndRegenerate(out var ct);
-        loadingIcon.Visible = true;
-        missionList.Visible = false;
+	private void OnConfigChanged(string section, string key, JsonNode value)
+	{
+		if (section != "missions")
+			return;
+		if (notableMode)
+		{
+			if (
+				key == "lite_notable_filter" ||
+				key == "notable_count" ||
+				key == "groupVBucks" ||
+				key == "groupLegSurvivors"
+			)
+				FilterMissions();
+		}
+		else
+		{
+			if(
+				key== "excludeAccountResourceAll"
+			)
+				FilterMissions();
+		}
+	}
 
-        Predicate<GameMission> missionPredicate = null;
-        Predicate<GameItem> itemPredicate = null;
-        if (notableMode)
-        {
-            itemPredicate = IsNotable;
-        }
-        else
-        {
-            List<string> requiredZones = zoneFilters
-                .Select(c => c.ButtonPressed && c.GetMeta("zone", "").ToString() is string result && !string.IsNullOrWhiteSpace(result) ? result : null)
-                .Where(result => result is not null)
-                .ToList();
-            missionPredicate = m => requiredZones.Count <= 0 || requiredZones.Contains(m.TheaterCat);
+	void SetupFilters(CheckButton[] filters)
+	{
+		foreach (var filter in filters)
+		{
+			var current = filter;
+			current.Toggled += newVal =>
+			{
+				if (lockFilter)
+					return;
+				if (Input.IsKeyPressed(Key.Alt))
+				{
+					GD.Print("Cur : " + current.Name);
+					foreach (var item in filters)
+					{
+						GD.Print(item.Name + ": " + item.ButtonPressed);
+					}
+				}
+				if (Input.IsKeyPressed(Key.Alt) && newVal)
+					TurnOnSelectedFilters(filters, current);
+				else if (!Input.IsKeyPressed(Key.Shift) && newVal && !(multiFilterToggle?.ButtonPressed ?? false))
+					TurnOffSelectedFilters(filters, current);
+				FilterMissions();
+			};
+		}
+	}
 
-            List<string> requiredRarities = rarityFilters
-                .Select(c => c.ButtonPressed && c.GetMeta("rarity", "").ToString() is string result && !string.IsNullOrWhiteSpace(result) ? result : null)
-                .Where(result => result is not null)
-                .ToList();
-            List<string> requiredTypes = typeFilters
-                .Select(c => c.ButtonPressed && c.GetMeta("type", "").ToString() is string result && !string.IsNullOrWhiteSpace(result) ? result : null)
-                .Where(result => result is not null)
-                .ToList();
-            itemPredicate = i =>
-            {
-                if (repeatabilityFilters[0].ButtonPressed && i.zcpEquivelent is not null)
-                    return false;
-                else if (repeatabilityFilters[1].ButtonPressed && i.zcpEquivelent is null)
-                    return false;
-                else if (repeatabilityFilters[2].ButtonPressed && (i.zcpEquivelent is null || i.quantity < 4))
-                    return false;
 
-                if (
-                    requiredRarities.Count > 0 &&
-                    !requiredRarities.Contains(i.sortingTemplate.Rarity ?? "Uncommon")
-                    )
-                    return false;
-                if (
-                    requiredTypes.Count > 0 &&
-                    !requiredTypes.Any(t => i.sortingTemplate.TemplateId.StartsWith(t)) &&
-                    !requiredTypes.Contains($"{i.sortingTemplate.Type}>{i.sortingTemplate.Category}")
-                    )
-                    return false;
-                return true;
-            };
-        }
+	public void TurnOffFilters()
+	{
+		lockFilter = true;
+		foreach (var filter in allFilters)
+		{
+			filter.ButtonPressed = false;
+		}
+		foreach (var filter in repeatabilityFilters)
+		{
+			filter.ButtonPressed = false;
+		}
+		lockFilter = false;
+		FilterMissions();
+	}
 
-        List<MissionRewardPair> filteredRewards = new();
+	bool lockFilter = false;
 
-        await Task.Run(() =>
-        {
-            foreach (var mission in missions)
-            {
-                if (missionPredicate is not null && !missionPredicate(mission))
-                    continue;
-                foreach (var item in mission.allItems)
-                {
-                    if (
-                        item.template.DisplayName == "Gold" || 
-                        item.template.DisplayName == "Venture XP"
-                        )
-                        continue;
-                    if(itemPredicate is not null && !itemPredicate(item))
-                        continue;
-                    filteredRewards.Add(new() { mission = mission, item = item });
-                    if (ct.IsCancellationRequested)
-                        return;
-                }
-            }
-        }, ct);
+	void TurnOffSelectedFilters(IEnumerable<CheckButton> onlyThese, CheckButton exceptThis = null)
+	{
+		lockFilter = true;
+		foreach (var filter in onlyThese)
+		{
+			filter.ButtonPressed = filter == exceptThis;
+		}
+		lockFilter = false;
+	}
+	void TurnOnSelectedFilters(IEnumerable<CheckButton> onlyThese, CheckButton exceptThis = null)
+	{
+		lockFilter = true;
+		foreach (var filter in onlyThese)
+		{
+			filter.ButtonPressed = filter != exceptThis;
+		}
+		lockFilter = false;
+	}
 
-        if (ct.IsCancellationRequested)
-            return;
+	void TryRefresh()
+	{
+		if (needsRefresh)
+			FilterMissions();
+	}
 
-        var sortedRewards = filteredRewards.OrderBy(r =>
-        {
-            var template = r.item.sortingTemplate;
-            if (notableMode)
-            {
-                if (template.RarityLevel == 6 && template.Type == "Worker")
-                    return -20; // mythic leads
-                if (template.VBucksOrXRayTickets)
-                    return -19; // v-bucks
-                if (template.TemplateId == "AccountResource:voucher_cardpack_bronze")
-                    return -18; // upgrade llamas
-                if (template.RarityLevel == 5 && template.Type == "Worker" && template.SubType is null)
-                    return -17; // legendary survivor (excl. leads)
-            }
-            return -template.RarityLevel - (r.item.template.CanBeLeveled ? 0.1 : 0);
-        })
-        .ThenBy(r => r.item.sortingTemplate.Type);
+	PLSearch.Instruction[] missionSearchInstructions = [];
+	PLSearch.Instruction[] itemSearchInstructions = [];
+	void UpdateSearch()
+	{
+		missionSearchInstructions = PLSearch.GenerateSearchInstructions(searchBar?.Text ?? "") ?? [];
+		itemSearchInstructions = PLSearch.GenerateSearchInstructions(itemSearchBar?.Text ?? "") ?? [];
+		//var searchText = searchBar?.Text ?? "";
+		//if (searchText.Contains("///"))
+		//{
+		//    string[] splitSearchText = searchText.Split("///");
+		//    missionSearchInstructions = PLSearch.GenerateSearchInstructions(splitSearchText[0]) ?? [];
+		//    itemSearchInstructions = PLSearch.GenerateSearchInstructions(splitSearchText[1..].Join()) ?? [];
+		//}
+		//else
+		//{
+		//    missionSearchInstructions = [];
+		//    itemSearchInstructions = PLSearch.GenerateSearchInstructions(searchText) ?? [];
+		//}
+		FilterMissions();
+	}
 
-        if (sortByPower?.ButtonPressed ?? false)
-        {
-            sortedRewards = sortedRewards.OrderBy(r => -r.mission.PowerLevel);
-        }
+	public static Func<GameItem, bool> CreateNotableFilter()
+	{
+		var notableFilterText = GameAccount.ActiveAccount.isOwned ?
+			GameAccount.ActiveAccount.GetLocalData("notable_mission_filter")?.ToString() ?? "" :
+			AppConfig.Get("missions", "lite_notable_filter", "");
+		if (string.IsNullOrWhiteSpace(notableFilterText))
+		{
+			notableFilterText = """
+                Mythic |
+                (V-Bucks | X-Ray) |
+                (Legendary Survivor !Lead) |
+                REMINDER
+                """;
+		}
+		var notableSearchInstructions = PLSearch.GenerateSearchInstructions(notableFilterText);
+		//templateId="Schematic:sid_edged_axe_scavenger_sr_ore_t01"
+		return item => PLSearch.EvaluateInstructions(notableSearchInstructions, item.RawData) || item.customData.ContainsKey("fools");
+	}
 
-        rewards = sortedRewards.ToList();
+	public static IOrderedEnumerable<GameItem> OrderByNotable(IEnumerable<GameItem> items) => OrderByNotableGen(items, StandardItemSelector);
+	public static IOrderedEnumerable<MissionRewardPair> OrderByNotable(IEnumerable<MissionRewardPair> pairs) => OrderByNotableGen(pairs, RewardPairSelector);
+	public static IOrderedEnumerable<MissionRewardPair> OrderByPower(IEnumerable<MissionRewardPair> pairs)
+	{
+		var initialOrder = pairs.OrderBy(r => -r.mission.PowerLevel);
+		return ThenByRewardPriority(initialOrder, RewardPairSelector);
+	}
+	public static IOrderedEnumerable<MissionRewardPair> OrderByDB(IEnumerable<MissionRewardPair> pairs)
+	{
+		return pairs
+			//.Reverse()
+			.OrderBy(r => r.item.sortingTemplate?.Type == "AccountResource" && !r.item.sortingTemplate.VBucksOrXRayTickets)
+			.ThenByDescending(r => r.mission.TheaterIdx)
+			.ThenByDescending(r => r.item.sortingTemplate.VBucksOrXRayTickets)
+			.ThenByDescending(r => r.item.sortingTemplate.RarityLevel)
+			.ThenByDescending(r => r.mission.PowerLevel)
+			.ThenByDescending(r => r.mission.IsFourPlayer)
+			.ThenBy(r => r.mission.missionData.missionGenerator)
+			//.ThenBy(r => r.mission.Guid)
+			//.Reverse().OrderBy(_=>true)
+			;
+	}
 
-        loadingIcon.Visible = false;
-        missionList.Visible = true;
+	public static IOrderedEnumerable<MissionRewardPair> OrderByDBPower(IEnumerable<MissionRewardPair> pairs)
+	{
+		return pairs
+			//.Reverse()
+			.OrderBy(r => r.item.sortingTemplate?.Type == "AccountResource" && !r.item.sortingTemplate.VBucksOrXRayTickets)
+			.ThenByDescending(r => r.mission.PowerLevel)
+			.ThenByDescending(r => r.mission.IsFourPlayer)
+			.ThenByDescending(r => r.mission.TheaterIdx)
+			.ThenByDescending(r => r.item.sortingTemplate.RarityLevel)
+			.ThenBy(r => OrderByMissionNameDB(r.mission.missionGenerator), StringComparer.InvariantCultureIgnoreCase)
+			//.ThenBy(r => r.mission.Guid)
+			//.Reverse().OrderBy(_=>true)
+			;
+	}
 
-        missionList.UpdateList(true);
-    }
+	public static IOrderedEnumerable<MissionRewardPair> OrderByTheaterThenInversePower(IEnumerable<MissionRewardPair> pairs)
+	{
+		return pairs
+			//.Reverse()
+			.OrderBy(r => r.item.sortingTemplate?.Type == "AccountResource" && !r.item.sortingTemplate.VBucksOrXRayTickets)
+			//.ThenByDescending(r => r.item.sortingTemplate.VBucksOrXRayTickets)
+			.ThenByDescending(r => r.mission.TheaterIdx)
+			.ThenBy(r => r.mission.PowerLevel)
+			.ThenBy(r => r.mission.IsFourPlayer)
+			.ThenBy(r => r.item.sortingTemplate.RarityLevel)
+			.ThenByDescending(r => OrderByMissionNameDB(r.mission.missionGenerator), StringComparer.InvariantCultureIgnoreCase)
+			//.ThenBy(r => r.mission.Guid)
+			//.Reverse().OrderBy(_=>true)
+			;
+	}
 
-    void ClearMissions()
-    {
-        loadingIcon.Visible = true;
-        missionList.Visible = false;
-    }
+	public static IEnumerable<MissionRewardPair> OrderByMode(IEnumerable<MissionRewardPair> pairs, int mode)
+	{
+		return mode switch
+		{
+			1337 => OrderByNotable(pairs),
+			160 => OrderByPower(pairs),
+			465 => OrderByDB(pairs),
+			333 => OrderByDBPower(pairs),
+			127 => OrderByTheaterThenInversePower(pairs),
+			_ => pairs,
+		};
+	}
+
+	static GameItem StandardItemSelector(GameItem item) => item;
+	static GameItem RewardPairSelector(MissionRewardPair pair) => pair.item;
+
+	static IOrderedEnumerable<T> OrderByNotableGen<T>(IEnumerable<T> rewards, Func<T, GameItem> itemSelector)
+	{
+		var initialOrder = rewards.OrderByDescending(r => NotablePriority(itemSelector(r).sortingTemplate));
+		return ThenByRewardPriority(initialOrder, itemSelector);
+	}
+
+	static int NotablePriority(GameItemTemplate template)
+	{
+		if (GameAccount.ActiveAccount.HasReminder(template))
+			return 25; // reminder items
+		if (template.RarityLevel == 6)
+			return 20; // mythics
+		if (template.VBucksOrXRayTickets)
+			return 19; // v-bucks
+						//if (template.TemplateId == "AccountResource:voucher_cardpack_bronze")
+						//    return -18; // upgrade llamas
+		if (template.RarityLevel == 5 && template.Type == "Worker" && template.SubType is null)
+			return 17; // legendary survivor (excl. leads)
+		return 0;
+	}
+
+	static IOrderedEnumerable<T> ThenByRewardPriority<T>(IOrderedEnumerable<T> items, Func<T, GameItem> itemSelector)
+	{
+		return items
+			.ThenByDescending(r => GameAccount.ActiveAccount.HasReminder(itemSelector(r).templateId))
+			.ThenByDescending(r => 
+				itemSelector(r).template.VBucksOrXRayTickets //||
+															 //r.item.sortingTemplate.HasLevel ||
+															 //r.item.template.DisplayName.Contains("Llama", StringComparison.InvariantCultureIgnoreCase)
+			)
+			.ThenBy(r => itemSelector(r).sortingTemplate?.Type == "AccountResource")
+			.ThenByDescending(r => itemSelector(r).sortingTemplate.RarityLevel)
+			.ThenBy(r => OrderByItemType(itemSelector(r).sortingTemplate), StringComparer.InvariantCultureIgnoreCase)
+			.ThenByDescending(r => itemSelector(r).DesiredLevel)
+			.ThenBy(r => itemSelector(r).sortingTemplate.DisplayName.EndsWith(" XP", StringComparison.InvariantCultureIgnoreCase))
+			.ThenBy(r => itemSelector(r).sortingTemplate.DisplayName)
+			.ThenBy(r => itemSelector(r).sortingTemplate != itemSelector(r).template)
+			.ThenByDescending(r => itemSelector(r).quantity);
+	}
+
+
+	bool needsRefresh = false;
+
+	void FilterMissions()
+	{
+		var missions = GameMission.MissionList;
+		if (lockFilter || missions is null)
+			return;
+		emptyIcon?.Texture = GameMission.DailyCat;
+		loadingIcon.Visible = false;
+		rewards = [];
+		if (!IsVisibleInTree())
+		{
+			needsRefresh = true;
+			return;
+		}
+		needsRefresh = false;
+		int curPL = (int)GameAccount.ActiveAccount.RatingData.PowerLevel;
+		int ventPL = (int)GameAccount.ActiveAccount.VentureRatingData.PowerLevel;
+
+		Func<GameMission, bool> missionPredicate = null;
+		Func<GameItem, bool> itemPredicate = null;
+		if (notableMode)
+		{
+			missionPredicate = m =>
+			{
+				if (filterPower?.ButtonPressed == true && !m.PlayableBy(GameAccount.ActiveAccount))
+					return false;
+				return true;
+			};
+			itemPredicate = CreateNotableFilter();
+		}
+		else
+		{
+			List<string> requiredZones = [.. zoneFilters
+				.Select(c => c.ButtonPressed && c.GetMeta("zone", "").ToString() is string result && !string.IsNullOrWhiteSpace(result) ? result : null)
+				.Where(result => result is not null)
+			];
+
+			missionPredicate = m =>
+			{
+				if (requiredZones.Count > 0 && !requiredZones.Contains(m.TheaterCat))
+					return false;
+				if (filterPower?.ButtonPressed == true && !m.PlayableBy(GameAccount.ActiveAccount))
+					return false;
+				if (filterStory?.ButtonPressed != true && m.IsStoryMission)
+					return false;
+				if (!PLSearch.EvaluateInstructions(missionSearchInstructions, m.SearchObject))
+					return false;
+				return true;
+			};
+
+			List<string> requiredRarities = [.. rarityFilters
+				.SelectMany(c =>
+					c.ButtonPressed &&
+					c.GetMeta("rarity", "").ToString() is string result &&
+					!string.IsNullOrWhiteSpace(result) ?
+					result.Split(",") : []
+				)
+			];
+			List<string> requiredTypes = [.. typeFilters
+				.SelectMany(c =>
+					c.ButtonPressed &&
+					c.GetMeta("type", "").ToString() is string result &&
+					!string.IsNullOrWhiteSpace(result) ? result.Split(",") : []
+				)
+			];
+			Func<GameItem, bool> notableItemFilter = null;
+
+			bool excludeAccountResources = AppConfig.Get("missions", "excludeAccountResourceAll", false);
+
+			bool TypeFilter(GameItem i)
+			{
+				if (requiredTypes.Any(t => i.sortingTemplate.TemplateId.StartsWith(t)))
+					return true;
+				if (requiredTypes.Contains("Hero") && i.sortingTemplate.Type == "CardPack" && i.sortingTemplate.RarityLevel != 6)
+					return true;
+				if (requiredTypes.Contains("Worker:manager") && i.sortingTemplate.Type == "CardPack" && i.sortingTemplate.RarityLevel == 6)
+					return true;
+				if (requiredTypes.Contains($"{i.sortingTemplate.Type}>{i.sortingTemplate.Category}"))
+					return true;
+				if (requiredTypes.Contains($"{i.sortingTemplate.Type}>_") && i.sortingTemplate.Category == null)
+					return true;
+				if (requiredTypes.Contains($"{i.sortingTemplate.Type}@{i.sortingTemplate.SubType}"))
+					return true;
+				if (requiredTypes.Contains($"{i.sortingTemplate.Type}@_") && i.sortingTemplate.SubType == null)
+					return true;
+				if (requiredTypes.Contains($"{i.sortingTemplate.Type}@_") && i.sortingTemplate.SubType == null)
+					return true;
+				return false;
+			}
+
+			bool StandardFilter(GameItem i)
+			{
+				if (repeatabilityFilters[0].ButtonPressed && i.zcpEquivelent is not null)
+					return false;
+				else if (repeatabilityFilters[1].ButtonPressed && i.zcpEquivelent is null)
+					return false;
+				else if (repeatabilityFilters[2].ButtonPressed && (i.zcpEquivelent is null || i.quantity < 4))
+					return false;
+
+				if (excludeAccountResources && i.sortingTemplate?.Type == "AccountResource")
+					return false;
+
+				if (requiredRarities.Count > 0 && !requiredRarities.Contains(i.sortingTemplate.Rarity ?? "Uncommon"))
+					return false;
+
+				if (requiredTypes.Count > 0 && !TypeFilter(i))
+					return false;
+
+				if (filterNotable?.ButtonPressed == true)
+				{
+					notableItemFilter ??= CreateNotableFilter();
+					if (!notableItemFilter(i))
+						return false;
+				}
+
+				if (!PLSearch.EvaluateInstructions(itemSearchInstructions, i.RawData))
+					return false;
+
+				return true;
+			}
+			itemPredicate = StandardFilter;
+		}
+
+		List<MissionRewardPair> filteredRewards = [];
+
+		foreach (var mission in missions)
+		{
+			if (missionPredicate is not null && !missionPredicate(mission))
+				continue;
+			foreach (var item in mission.alertRewardItems ?? [])
+			{
+				if (item.template.DisplayName == "Venture XP")
+					continue;
+				if (itemPredicate?.Invoke(item) == false)
+					continue;
+				if (excludeTodo && MissionToDoListController.IsOnToDoList(item))
+					continue;
+				filteredRewards.Add(new(mission, item));
+			}
+			foreach (var item in mission.rewardItems ?? [])
+			{
+				if (
+					item.template.DisplayName == "Gold" ||
+					item.template.DisplayName == "Venture XP" ||
+					item.template.DisplayName == "People XP" ||
+					item.template.DisplayName == "Schematic XP"
+					)
+					continue;
+				if (itemPredicate?.Invoke(item) == false)
+					continue;
+				if (excludeTodo && MissionToDoListController.IsOnToDoList(item))
+					continue;
+				filteredRewards.Add(new(mission, item));
+			}
+		}
+
+		string[] ignorePrefixes = [.. excludeRewards.Select(e => e.TargetTemplatePrefix).Where(p => p is not null)];
+		todoRewards = [.. filteredRewards];
+		bulkTodoBtn?.Disabled = todoRewards.All(r => MissionToDoListController.IsOnToDoList(r.item));
+
+		rewards = [.. OrderByMode(todoRewards.Where(r=>!ignorePrefixes.Any(p => r.item.templateId.StartsWith(p))), sortMode?.GetSelectedId() ?? 1337)];
+		int limit = AppConfig.Get("missions", "notable_count", 20);
+		if (notableMode && rewards.Count > limit)
+			rewards = rewards[..limit];
+
+		emptyContent?.Visible = rewards.Count == 0;
+
+		newMissionList?.UpdateList();
+		if (missionList is null)
+			return;
+		missionList.UpdateList(true);
+		missionList.Visible = true;
+	}
+
+	void BulkAddToDoList()
+	{
+		if (!IsVisibleInTree())
+			return;
+		MissionToDoListController.BulkAddToList([.. todoRewards]);
+		bulkTodoBtn?.Disabled = true;
+	}
+
+	//todo: user configurable sorting rules
+	static string OrderByItemType(GameItemTemplate template) => template?.Type switch
+	{
+		"Hero" => "000000",
+		"Worker" when template.SubType is null => "00000Z",
+		"Worker" => "0000ZZ",
+		"AccountResource" when template.DisplayName.Contains("Perk", StringComparison.OrdinalIgnoreCase) => "000AZZ",
+		"AccountResource" when template.Name.Contains("reagent_alteration", StringComparison.OrdinalIgnoreCase) => "000ZZZ",
+		"AccountResource" => "00ZZZZ",
+		_ => template?.Type,
+	};
+
+	static string OrderByMissionNameDB(GameItemTemplate template) => template?.DisplayName switch
+	{
+		"Fight Category 4 Storm" => "000000",
+		"Fight Category 3 Storm" => "000001",
+		"Fight Category 2 Storm" => "000002",
+		"Ride The Lightning" => "000010",
+		"Repair the Shelter" => "000020",
+		"Resupply" => "000020",
+		"Retrieve the Data" => "000025",
+		"Refuel the Homebase" => "000030",
+		"Fight the Storm" => "000033",
+		"Elimenate and Collect" => "000040",
+		"Destroy the Encampments" => "000050",
+		_ => template?.DisplayName,
+	};
+
+	void ClearMissions()
+	{
+		loadingIcon.Visible = true;
+		rewards.Clear();
+		newMissionList?.UpdateList();
+		missionList?.Visible = false;
+		emptyContent?.Visible = false;
+	}
 }
 
-public struct MissionRewardPair
-{
-    public GameMission mission;
-    public GameItem item;
-}
+public record struct MissionRewardPair(GameMission mission, GameItem item);

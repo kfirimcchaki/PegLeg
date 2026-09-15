@@ -1,59 +1,97 @@
 using Godot;
-using System;
 using System.Text.Json.Nodes;
 
 public partial class ConfigToggleHook : Control
 {
-    [Signal]
-    public delegate void ConfigValueChangedEventHandler(bool newValue);
+	[Signal]
+	public delegate void ConfigValueChangedEventHandler(bool newValue);
+	[Signal]
+	public delegate void ConfigValueChangedInverseEventHandler(bool newValue);
+	[Signal]
+	public delegate void OnTrueEventHandler();
+	[Signal]
+	public delegate void OnFalseEventHandler();
 
-    [Export]
-    string section;
+	[Export]
+	string section;
 
-    [Export]
-    string key;
+	[Export]
+	string key;
 
-    [Export]
-    bool defaultValue = false;
+	[Export]
+	bool defaultValue = false;
 
-    [Export]
-    bool tryBind = true;
+	[Export]
+	bool tryBind = true;
+	[Export]
+	bool logChanges = false;
+	[Export]
+	bool disabled = false;
 
-    bool valueIsChanging;
+	bool valueIsChanging;
 
-    public override void _Ready()
-    {
-        if (tryBind)
-        {
-            if (HasSignal("toggled"))
-            {
-                Connect("toggled", Callable.From<bool>(SetValue));
-            }
-            if ((bool?)Get("button_pressed") is bool)
-            {
-                ConfigValueChanged += newVal => Set("button_pressed", newVal);
-            }
-        }
+	public void UpdateTargetSetting(string section, string key)
+	{
+		this.section = section ?? this.section;
+		this.key = key ?? this.key;
 
-        base._Ready();
-        AppConfig.OnConfigChanged += UpdateValue;
-        valueIsChanging = true;
-        EmitSignal(SignalName.ConfigValueChanged, AppConfig.Get(section, key, defaultValue));
-        valueIsChanging = false;
-    }
+		valueIsChanging = true;
+		Emit(AppConfig.Get(this.section, this.key, defaultValue));
+		valueIsChanging = false;
+	}
 
-    private void UpdateValue(string section, string key, JsonValue val)
-    {
-        if (section != this.section || key != this.key)
-            return;
-        valueIsChanging = true;
-        EmitSignal(SignalName.ConfigValueChanged, val.GetValue<bool>());
-        valueIsChanging = false;
-    }
+	public override void _Ready()
+	{
+		if (disabled)
+			return;
 
-    public void SetValue(bool newValue)
-    {
-        if (!valueIsChanging)
-            AppConfig.Set(section, key, newValue);
-    }
+		if (tryBind)
+		{
+			if (HasSignal("toggled"))
+			{
+				Connect("toggled", Callable.From<bool>(SetValue));
+			}
+			if ((bool?)Get("button_pressed") is bool)
+			{
+				ConfigValueChanged += newVal => Set("button_pressed", newVal);
+			}
+		}
+
+		AppConfig.OnConfigChanged += UpdateValue;
+		valueIsChanging = true;
+		Emit(AppConfig.Get(section, key, defaultValue));
+		valueIsChanging = false;
+	}
+
+	private void UpdateValue(string section, string key, JsonNode val)
+	{
+		if (section != this.section || key != this.key)
+			return;
+		valueIsChanging = true;
+		Emit(val.GetValue<bool>());
+		valueIsChanging = false;
+	}
+
+	private void Emit(bool newVal)
+	{
+		if (newVal)
+			EmitSignalOnTrue();
+		else
+			EmitSignalOnFalse();
+		EmitSignalConfigValueChanged(newVal);
+		EmitSignalConfigValueChangedInverse(!newVal);
+		if (logChanges)
+			GD.Print($"{section}:{key} = {newVal}");
+	}
+
+	public void SetValue(bool newValue)
+	{
+		if (!valueIsChanging)
+			AppConfig.Set(section, key, newValue);
+	}
+
+	public override void _ExitTree()
+	{
+		AppConfig.OnConfigChanged -= UpdateValue;
+	}
 }

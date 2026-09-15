@@ -6,202 +6,292 @@ using System.Threading;
 
 public partial class SurvivorSquadEntry : Control
 {
-    [Export]
-    string synergy;
+	[Export]
+	string synergy;
 
-    [Export(PropertyHint.ArrayType)]
-    string[] slotRequirements;
+	[Export(PropertyHint.ArrayType)]
+	string[] slotRequirements;
 
-    [ExportGroup("References")]
-    [Export]
-    Label squadNameLabel;
+	[ExportGroup("References")]
+	[Export]
+	Label squadNameLabel;
 
-    [Export]
-    TextureRect squadIcon;
+	[Export]
+	TextureRect squadIcon;
 
-    [Export]
-    Label fortPointsLabel;
+	[Export]
+	Label fortPointsLabel;
 
-    [Export]
-    TextureRect fortPointsIcon;
+	[Export]
+	TextureRect fortPointsIcon;
 
-    [Export]
-    InventoryItemSlot leadSurvivorSlot;
+	[Export]
+	InventoryItemSlot leadSurvivorSlot;
 
-    [Export(PropertyHint.ArrayType)]
-    InventoryItemSlot[] survivorSlots;
+	[Export(PropertyHint.ArrayType)]
+	InventoryItemSlot[] survivorSlots;
 
-    bool statUpdateQueued = false;
-    GameAccount overrideAccount;
+	[Export]
+	Control summaryParent;
 
-    public override void _Ready()
-    {
-        //GD.Print($"{synergy} ({BanjoAssets.supplimentaryData.SquadNames.ContainsKey(synergy)})");
-        squadNameLabel.Text = BanjoAssets.supplimentaryData.SquadNames[synergy];
-        squadIcon.Texture = BanjoAssets.supplimentaryData.SquadIcons[synergy];
-        fortPointsIcon.Texture = BanjoAssets.supplimentaryData.SquadFortIcons[synergy];
+	Control[] summaryNodes = [];
 
-        leadSurvivorSlot.OnItemChangeRequested += slot => HandleChangeRequest(slot, 0);
-        leadSurvivorSlot.OnSlotItemChanged += _ =>
-        {
-            for (int i = 0; i < survivorSlots.Length; i++)
-                survivorSlots[i].UpdateItem();
-            statUpdateQueued = true;
-        };
-        leadSurvivorSlot.SetSlotData(
-                FnProfileTypes.AccountItems,
-                "Worker",
-                BanjoAssets.supplimentaryData.SynergyToSquadId[synergy],
-                0,
-                "HomebaseNode:questreward_" + slotRequirements[0].ToLower()
-            );
+	bool squadUpdateQueued = false;
+	GameAccount overrideAccount;
 
-        for (int i = 0; i < survivorSlots.Length; i++)
-        {
-            int slotIndex = i + 1;
+	public override void _Ready()
+	{
+		//GD.Print($"{synergy} ({BanjoAssets.supplimentaryData.SquadNames.ContainsKey(synergy)})");
+		squadNameLabel.Text = PegLegResourceManager.supplimentaryData.SquadNames[synergy];
+		squadIcon.Texture = PegLegResourceManager.supplimentaryData.SquadIcons[synergy];
+		fortPointsIcon.Texture = PegLegResourceManager.supplimentaryData.SquadFortIcons[synergy];
 
-            survivorSlots[i].OnItemChangeRequested += slot => HandleChangeRequest(slot, slotIndex);
-            survivorSlots[i].OnSlotItemChanged += handle => statUpdateQueued = true;
+		summaryNodes = summaryParent?.GetChildren().OfType<Control>().ToArray() ?? summaryNodes;
 
-            survivorSlots[i].SetSlotData(
-                    FnProfileTypes.AccountItems,
-                    "Worker",
-                    BanjoAssets.supplimentaryData.SynergyToSquadId[synergy],
-                    slotIndex,
-                    "HomebaseNode:questreward_" + slotRequirements[slotIndex].ToLower()
-                );
-        }
+		leadSurvivorSlot.OnItemChangeRequested += slot => HandleChangeRequest(slot, 0);
+		leadSurvivorSlot.OnSlotItemChanged += _ =>
+		{
+			for (int i = 0; i < survivorSlots.Length; i++)
+				survivorSlots[i].UpdateItem();
+			squadUpdateQueued = true;
+		};
+		leadSurvivorSlot.SetSlotData(
+			FnProfileTypes.AccountItems,
+			"Worker",
+			PegLegResourceManager.supplimentaryData.SynergyToSquadId[synergy],
+			0,
+			"HomebaseNode:questreward_" + slotRequirements[0].ToLower()
+		);
 
-        SetOverrideAccount();
-        GameAccount.ActiveAccountChanged += OnActiveAccountChanged;
-    }
+		for (int i = 0; i < survivorSlots.Length; i++)
+		{
+			int slotIndex = i + 1;
 
-    void OnActiveAccountChanged()
-    {
-        if (overrideAccount is null)
-            UpdateAccount();
-    }
+			survivorSlots[i].OnItemChangeRequested += slot => HandleChangeRequest(slot, slotIndex);
+			survivorSlots[i].OnSlotItemChanged += _ => squadUpdateQueued = true;
 
-    public void SetOverrideAccount(GameAccount account = null)
-    {
-        overrideAccount = account;
-        UpdateAccount();
-    }
+			survivorSlots[i].SetSlotData(
+				FnProfileTypes.AccountItems,
+				"Worker",
+				PegLegResourceManager.supplimentaryData.SynergyToSquadId[synergy],
+				slotIndex,
+				"HomebaseNode:questreward_" + slotRequirements[slotIndex].ToLower()
+			);
+		}
 
-    CancellationTokenSource accountChangeCts;
-    public async void UpdateAccount()
-    {
-        //show loading icon?
-        Visible = false;
-        fortPointsLabel.Text = "+???";
+		SetOverrideAccount();
+		GameAccount.ActiveAccountChanged += OnActiveAccountChanged;
+	}
 
-        accountChangeCts.CancelAndRegenerate(out var ct);
+	public override void _ExitTree()
+	{
+		GameAccount.ActiveAccountChanged -= OnActiveAccountChanged;
+	}
 
-        var account = overrideAccount ?? GameAccount.activeAccount;
-        var newProfile = await account.GetProfile(FnProfileTypes.AccountItems).Query();
-        if (newProfile is null || ct.IsCancellationRequested)
-            return;
+	void OnActiveAccountChanged()
+	{
+		if (overrideAccount is null)
+			UpdateAccount();
+	}
 
-        bool hasAnySlot = slotRequirements.Distinct().Any(requirement =>
-            newProfile.GetFirstTemplateItem("HomebaseNode:questreward_" + requirement.ToLower()) is not null
-        );
+	public void SetOverrideAccount(GameAccount account = null)
+	{
+		overrideAccount = account;
+		UpdateAccount();
+	}
 
-        leadSurvivorSlot.SetOverrideAccount(overrideAccount);
+	CancellationTokenSource accountChangeCts;
+	public async void UpdateAccount()
+	{
+		//show loading icon?
+		Visible = false;
+		fortPointsLabel.Text = "+???";
 
-        for (int i = 0; i < survivorSlots.Length; i++)
-        {
-            survivorSlots[i].SetOverrideAccount(overrideAccount);
-        }
+		accountChangeCts = accountChangeCts.CancelAndRegenerate(out var ct);
 
-        if (hasAnySlot)
-            Visible = true;
+		var account = overrideAccount ?? GameAccount.ActiveAccount;
+		var newProfile = await account.GetProfile(FnProfileTypes.AccountItems).Query();
+		if (newProfile is null || ct.IsCancellationRequested)
+			return;
 
-        UpdateFortStat();
-    }
+		bool hasAnySlot = slotRequirements.Distinct().Any(requirement =>
+			newProfile.GetFirstTemplateItem("HomebaseNode:questreward_" + requirement.ToLower()) is not null
+		);
 
+		leadSurvivorSlot.SetOverrideAccount(overrideAccount);
 
-    public override void _Process(double delta)
-    {
-        if (statUpdateQueued)
-            UpdateFortStat();
-        statUpdateQueued = false;
-    }
+		for (int i = 0; i < survivorSlots.Length; i++)
+		{
+			survivorSlots[i].SetOverrideAccount(overrideAccount);
+		}
 
-    void UpdateFortStat()
-    {
-        int summedValue = leadSurvivorSlot.slottedItem?.Rating ?? 0;
-        summedValue += survivorSlots.Select(slot => slot.slottedItem?.Rating ?? 0).Sum();
+		if (hasAnySlot)
+			Visible = true;
 
-        if (IsInstanceValid(fortPointsLabel))
-            fortPointsLabel.Text = $"+{summedValue}";
-    }
+		UpdateSquadSummary();
+	}
 
-    static readonly Predicate<GameItem> standardFilter = item =>
-        item.attributes?["squad_id"] is null &&
-        item.template.SubType is null;
+	public override void _Process(double delta)
+	{
+		if (squadUpdateQueued)
+			UpdateSquadSummary();
+		squadUpdateQueued = false;
+	}
 
-    static readonly Predicate<GameItem> leaderFilter = item =>
-        item.attributes?["squad_id"] is null &&
-        item.template.SubType is not null;
+	void UpdateSquadSummary()
+	{
+		if (!IsInstanceValid(fortPointsLabel))
+			return;
+		int statValue = leadSurvivorSlot.slottedItem?.CalculateSurvivorRating(true) ?? 0;
+		statValue += survivorSlots.Sum(slot => slot.slottedItem?.CalculateSurvivorRating(true) ?? 0);
+		fortPointsLabel.Text = $"+{statValue}";
+		summaryParent.Visible = false;
 
-    async void HandleChangeRequest(InventoryItemSlot slot, int slotIndex)
-    {
-        var profile = slot.currentProfile;
-        if (!(profile?.account.isOwned ?? false) || squadLocked)
-            return;
+		if (leadSurvivorSlot.slottedItem is GameItem item)
+		{
+			var targetPersonality = item.Personality;
+			var matchingCount = survivorSlots.Count(slot => slot.slottedItem?.Personality == targetPersonality);
+			SetSummaryCount(
+				0,
+				true,
+				item.GetTexture(FnItemTextureType.Personality),
+				$"{matchingCount}/7",
+				matchingCount == 7 ? Colors.Yellow : Colors.White,
+				null,
+				$"Leader Personality Match\n{matchingCount}/7"
+			);
+		}
+		else
+		{
+			SetSummaryCount(0, false);
+		}
+		var distinctSetBonuses = survivorSlots
+			.Select(slot => slot.slottedItem?.SetBonus)
+			.Where(s => s is not null)
+			.Distinct()
+			.ToArray();
+		for (int i = 0; i < distinctSetBonuses.Length; i++)
+		{
+			var setBonus = distinctSetBonuses[i];
+			var matching = survivorSlots.Where(slot => slot.slottedItem?.SetBonus == setBonus).ToArray();
+			var baseRequiredCount = setBonus switch
+			{
+				"Ability Damage" or "Melee Damage" or
+				"Ranged Damage" or "Trap Damage" => 3,
+				_ => 2
+			};
+			var boostCount = matching.Length / baseRequiredCount;
+			var boostPercent = setBonus == "Trap Durability" ? 8 : 5;
+			var countText = $"{matching.Length}/{baseRequiredCount}{(boostCount > 1 ? $" (x{boostCount})" : "")}";
+			SetSummaryCount(
+				i + 1,
+				true,
+				matching[0].slottedItem.GetTexture(FnItemTextureType.SetBonus),
+				countText,
+				matching.Length >= baseRequiredCount ? Colors.Yellow : Colors.White,
+				matching.Length >= baseRequiredCount ? $"+{boostPercent*boostCount}%" : null,
+				$"{setBonus}\n{countText}"
+			);
+		}
+		for (int i = distinctSetBonuses.Length + 1; i < summaryNodes.Length; i++)
+		{
+			SetSummaryCount(i, false);
+		}
+	}
 
-        var filter = slot == leadSurvivorSlot ? leaderFilter : standardFilter;
-        var fromItem = slot.slottedItem;
-        var squadID = BanjoAssets.supplimentaryData.SynergyToSquadId[synergy];
+	void SetSummaryCount(int idx, bool visible) =>
+		SetSummaryCount(idx, visible, null, null, default, null, null);
 
-        GameItemSelector.Instance.RestoreDefaults();
-        GameItemSelector.Instance.titleText = "Select a Survivor";
-        GameItemSelector.Instance.overrideSurvivorSquad = squadID;
-        GameItemSelector.Instance.allowEmptySelection = true;
-        var selectedHandles = await GameItemSelector.Instance.OpenSelector(profile.GetItems("Worker", filter));
+	void SetSummaryCount(int idx, bool visible, Texture2D icon, string countText, Color countTint, string bonusText, string tooltip)
+	{
+		if (summaryNodes.Length <= idx || summaryNodes.Length == 0)
+			return;
+		var node = summaryNodes[idx];
+		node.Visible = visible;
+		if (!visible)
+			return;
+		summaryParent.Visible = true;
+		node.TooltipText = tooltip;
+		if (node.GetNodeOrNull<TextureRect>("%Icon") is TextureRect iconRect)
+			iconRect.Texture = icon;
+		if (node.GetNodeOrNull<Label>("%Counter") is Label countLabel)
+		{
+			countLabel.Text = countText;
+			countLabel.SelfModulate = countTint;
+		}
+		if (node.GetNodeOrNull<Label>("%BonusText") is Label bonusLabel)
+		{
+			bonusLabel.Text = bonusText;
+			bonusLabel.Visible = bonusText is not null;
+		}
+	}
 
-        //occurs when cancelled
-        if (selectedHandles is null)
-            return;
+	static readonly Predicate<GameItem> standardFilter = item =>
+		(item.attributes?["squad_id"]?.ToString() ?? "") == "" &&
+		item.template.SubType is null;
 
-        var toHandle = selectedHandles.FirstOrDefault();
-        JsonObject body = null;
-        if (toHandle?.profile is not null)
-        {
-            //set slotted survivor
-            body = new()
-            {
-                ["characterId"] = toHandle.uuid,
-                ["squadId"] = squadID,
-                ["slotIndex"] = slotIndex
-            };
-        }
-        else if (fromItem?.profile is not null)
-        {
-            //unslot slotted survivor
-            body = new()
-            {
-                ["characterId"] = fromItem.uuid,
-                ["squadId"] = "",
-                ["slotIndex"] = 0
-            };
-        }
+	static readonly Predicate<GameItem> leaderFilter = item =>
+		(item.attributes?["squad_id"]?.ToString() ?? "") == "" &&
+		item.template.SubType is not null;
 
-        if (body is not null && await profile?.account.Authenticate() && profile.profileId == FnProfileTypes.AccountItems)
-        {
-            try
-            {
-                squadLocked = true;
-                await profile.PerformOperation("AssignWorkerToSquad", body.ToString());
-                GD.Print(profile.lastOp);
-                profile.account.GetFORTStats(true);
-            }
-            finally
-            {
-                squadLocked = false;
-            }
-        }
-    }
+	async void HandleChangeRequest(InventoryItemSlot slot, int slotIndex)
+	{
+		var profile = slot.currentProfile;
+		if (!(profile?.account.isOwned ?? false) || squadLocked)
+			return;
 
-    bool squadLocked = false;
+		var filter = slot == leadSurvivorSlot ? leaderFilter : standardFilter;
+		var fromItem = slot.slottedItem;
+		var squadID = PegLegResourceManager.supplimentaryData.SynergyToSquadId[synergy];
+
+		var selectedItem = await SimpleItemSelector.OpenSelector(profile.GetItems("Worker", filter), SimpleItemSelector.DefaultConfig with
+		{
+			title = "Select a Survivor",
+			overrideSurvivorSquad = squadID,
+			allowEmptySelection = true,
+			showSurvivorFilters = true,
+		});
+
+		//occurs when cancelled
+		if (selectedItem is null)
+			return;
+
+		JsonObject body = null;
+		if (selectedItem?.profile is not null)
+		{
+			//set slotted survivor
+			body = new()
+			{
+				["characterId"] = selectedItem.uuid,
+				["squadId"] = squadID,
+				["slotIndex"] = slotIndex
+			};
+		}
+		else if (fromItem?.profile is not null)
+		{
+			//unslot slotted survivor
+			body = new()
+			{
+				["characterId"] = fromItem.uuid,
+				["squadId"] = "",
+				["slotIndex"] = 0
+			};
+		}
+
+		if (body is not null && profile.profileId == FnProfileTypes.AccountItems)
+		{
+			try
+			{
+				squadLocked = true;
+				await profile.PerformOperation("AssignWorkerToSquad", body.ToString());
+				GD.Print("Last Op: " + profile.lastOp);
+			}
+			finally
+			{
+				squadLocked = false;
+			}
+		}
+	}
+
+	bool squadLocked = false;
 }

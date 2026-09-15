@@ -1,548 +1,638 @@
 using Godot;
-using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
+public partial class AppConfig
+{
+	public CosmeticShopConfig cosmeticShop = new();
+	public class CosmeticShopConfig
+	{
+		public bool simpleCosmetics;
+		public bool navigationVisible = true;
+		public bool autoFilterNew;
+		public bool autoCreatorCode = true;
+		public int simpleCosmeticTileSize = 150;
+	}
+}
+
 public partial class CosmeticShopInterface : Control
 {
-    [Export]
-    Button sacButton;
-    [Export]
-    ScrollContainer verticalScrollBox;
-    [Export]
-    Control navContainer;
-    [Export]
-    Tree navigationPane;
-    [Export]
-    Control pageParent;
-    [Export]
-    Control simpleShopParent;
-    [Export]
-    Control loadingAnim;
-    [Export]
-    Control shopContent;
-    [ExportGroup("Scenes")]
-    [Export]
-    PackedScene shopHeaderScene;
-    [Export]
-    PackedScene shopRowScene;
-    [Export]
-    PackedScene shopEntryScene;
-    [ExportGroup("Filter Bar")]
-    [Export]
-    Control navToggle;
-    [Export]
-    Control filterBlocker;
-    [Export]
-    int simpleOpsPerFrame = 30;
-    [Export]
-    CheckButton requireLeavingSoon;
-    [Export]
-    CheckButton requireAddedToday;
-    [Export]
-    CheckButton includeDiscountBundles;
-    [Export(PropertyHint.ArrayType)]
-    CheckButton[] newOrOldFilters = Array.Empty<CheckButton>();
-    [Export(PropertyHint.ArrayType)]
-    CheckButton[] typeFilters = Array.Empty<CheckButton>();
-    [Export]
-    Button resetTypeFilters;
+	[Export]
+	Button sacButton;
+	[Export]
+	ScrollContainer verticalScrollBox;
+	[Export]
+	Control navContainer;
+	[Export]
+	Tree navigationPane;
+	[Export]
+	Control pageParent;
+	[Export]
+	Control simpleShopParent;
+	[Export]
+	Control loadingAnim;
+	[Export]
+	Control shopContent;
+	[ExportGroup("Scenes")]
+	[Export]
+	PackedScene shopHeaderScene;
+	[Export]
+	PackedScene shopRowScene;
+	[Export]
+	PackedScene shopEntryScene;
+	[ExportGroup("Filter Bar")]
+	[Export]
+	Control navToggle;
+	[Export]
+	Control filterBlocker;
+	[Export]
+	int simpleOpsPerFrame = 10;
+	[Export]
+	CheckButton requireLeavingSoon;
+	[Export]
+	CheckButton requireAddedToday;
+	[Export]
+	CheckButton includeDiscountBundles;
+	[Export(PropertyHint.ArrayType)]
+	CheckButton[] newOrOldFilters = [];
+	[Export(PropertyHint.ArrayType)]
+	CheckButton[] typeFilters = [];
+	[Export]
+	Button resetTypeFilters;
+	[Export]
+	OptionButton regionSelector;
+	[Export(PropertyHint.File, "*.json")]
+	string regionFile;
+	[Export(PropertyHint.GlobalFile, "*.json")]
+	string regionExFile;
+	static FrozenDictionary<string, string> regionNames;
+	static FrozenDictionary<string, decimal> regionWeights;
 
-    public override void _Ready()
-    {
-        VisibilityChanged += async () =>
-        {
-            if (IsVisibleInTree())
+	public static decimal GetRegionWeight(string code) => regionWeights.TryGetValue(code, out var weight) ? weight : 0;
+
+	public override void _Ready()
+	{
+		//using (var inFile = FileAccess.Open(regionExFile, FileAccess.ModeFlags.Read))
+		//{
+		//    var inData = JsonNode.Parse(inFile.GetAsText());
+		//    JsonObject outNames = [];
+		//    JsonObject outWeights = [];
+		//    ulong sum = 0;
+		//    foreach (var data in inData.AsArray())
+		//    {
+		//        var key = data["Alpha_2"].ToString();
+		//        outNames[key] = data["Country"].ToString();
+		//        ulong pop= data["Population"].GetValue<ulong>();
+		//        sum += pop;
+		//        outWeights[key] = pop;
+		//    }
+		//    var text = new JsonObject()
+		//    {
+		//        ["names"] = outNames,
+		//        ["weights"] = outWeights,
+		//        ["totalWeights"] = sum,
+		//    }.ToJsonString(Helpers.JsonOptions.Fields);
+		//    var outFile = FileAccess.Open(regionFile, FileAccess.ModeFlags.Write);
+		//    outFile.StoreString(text);
+		//}
+
+		var inData = PegLegResourceManager.LoadResourceObj("regionWeights.json");
+		regionNames = inData["names"].Deserialize<Dictionary<string, string>>().ToFrozenDictionary();
+		var regionWeightTotal = (decimal)inData["totalWeights"].GetValue<ulong>();
+		var regionLongWeights = inData["weights"].Deserialize<Dictionary<string, ulong>>();
+		regionWeights = regionLongWeights.ToFrozenDictionary(kvp => kvp.Key, kvp => kvp.Value / regionWeightTotal);
+
+		regionSelector.Clear();
+		regionSelector.AddItem("All");
+		regionSelector.SetItemMetadata(0, "*");
+		regionSelector.AddItem("G  -  Global");
+		regionSelector.SetItemMetadata(1, "G");
+		regionSelector.AddSeparator("Regions");
+		int regIdx = 1;
+		foreach (var kvp in regionNames.OrderBy(kvp => kvp.Key))
+		{
+			regIdx++;
+			regionSelector.AddItem($"{kvp.Key}  -  {kvp.Value}");
+			regionSelector.SetItemMetadata(regIdx, kvp.Key);
+		}
+
+		VisibilityChanged += LoadShop;
+
+		navigationPane.CellSelected += OnNavSelected;
+		sacButton.Pressed += OpenSACPrompt;
+
+		requireAddedToday.Pressed += ApplyFilters;
+		requireLeavingSoon.Pressed += ApplyFilters;
+		includeDiscountBundles.Pressed += ApplyFilters;
+		foreach (var button in newOrOldFilters)
+		{
+			button.Pressed += ApplyFilters;
+		}
+		foreach (var button in typeFilters)
+		{
+			button.Pressed += ApplyFilters;
+		}
+		resetTypeFilters.Pressed += () =>
+		{
+			foreach (var item in typeFilters)
+			{
+				item.ButtonPressed = Input.IsKeyPressed(Key.Shift);
+			}
+			ApplyFilters();
+		};
+		navContainer.Visible = AppConfig.Get("item_shop", "navigation_visible", true) && !AppConfig.Get("item_shop", "simple_cosmetics", false);
+		requireAddedToday.ButtonPressed = AppConfig.Get("item_shop", "auto_filter_new", false);
+
+		AppConfig.OnConfigChanged += OnConfigChanged;
+		RefreshTimerController.OnHourChanged += LoadShop;
+		GameAccount.ActiveAccountChanged += OnActiveAccountChanged;
+	}
+	private async void OnActiveAccountChanged() => await UpdateSAC();
+
+	private async Task UpdateSAC()
+	{
+		string currentSACCode = await GameAccount.ActiveAccount.GetSACCode(false);
+		if (currentSACCode != "None" && await GameAccount.ActiveAccount.GetSACTime() > 1 && AppConfig.Get("automation", "creatorcode", false))
+		{
+			//GD.Print(currentSACCode);
+			await GameAccount.ActiveAccount.SetSACCode(currentSACCode);
+		}
+		sacButton.Text = currentSACCode;
+	}
+
+	private void OnConfigChanged(string section, string key, JsonNode value)
+	{
+		if (section != "item_shop")
+			return;
+		if (key == "simple_cosmetics")
+		{
+			if (AppConfig.Get<bool>("item_shop", "simple_cosmetics"))
+				navContainer.Visible = false;
+			else
+				navContainer.Visible = AppConfig.Get("item_shop", "navigation_visible", true);
+
+			activeOffers.Clear();
+			LoadShop(true);
+		}
+		if (key == "simple_cosmetic_tilesize")
+		{
+			if (AppConfig.Get<bool>("item_shop", "simple_cosmetics") && IsVisibleInTree())
+				LoadShop(true);
+		}
+		if (key == "navigation_visible")
+		{
+			if (!AppConfig.Get<bool>("item_shop", "simple_cosmetics"))
+				navContainer.Visible = value.GetValue<bool>();
+		}
+	}
+
+	public override void _Process(double delta)
+	{
+		if (Visible && (Engine.GetProcessFrames() % 10) == 1)//only do this every 10 frames
+			UpdateShopOfferResourceLoading();
+	}
+
+	public override void _ExitTree()
+	{
+		AppConfig.OnConfigChanged -= OnConfigChanged;
+		RefreshTimerController.OnHourChanged -= LoadShop;
+		GameAccount.ActiveAccountChanged -= OnActiveAccountChanged;
+	}
+
+	async void OpenSACPrompt()
+	{
+		string subtext = GD.Randf() > 0.85f ?
+			"By enabling the \"Auto-apply creator code\" setting, PegLeg can automatically refresh the duration of your selected code when you load the shop!" :
+			"Whoever you choose to support will recieve 5% of the cost of any Real-Money or VBuck purchases you make";
+		var newCode = await GenericLineEditWindow.ShowLineEdit("Support A Creator!", subtext, sacButton.Text, "Who do you want to support?");
+		if (newCode is null)
+			return;
+
+		using var _ = LoadingOverlay.CreateToken();
+
+		await GameAccount.ActiveAccount.SetSACCode(newCode);
+		sacButton.Text = await GameAccount.ActiveAccount.IsSACExpired() ? "None" : (await GameAccount.ActiveAccount.GetSACCode());
+	}
+
+	private void OnNavSelected()
+	{
+		TreeItem item = navigationPane.GetSelected();
+		if (item.GetChildCount() > 0 && item.GetParent() is not null)
+		{
+			item.Collapsed = !item.Collapsed;
+			if (!item.Collapsed)
+			{
+				navigationPane.CallDeferred("set_selected", item.GetFirstChild(), 0);
+			}
+			else
+			{
+				navigationPane.CallDeferred("set_selected", navigationPane.GetRoot(), 0);
+			}
+			//navigationPane.SetSelected(item.GetFirstChild(), 0);
+			return;
+		}
+		Control metaControl = (Control)item.GetMetadata(0);
+		if (item.GetParent() is null)
+			return;
+		int scrollLevel = (int)metaControl.Position.Y;
+		var scrollTween = GetTree().CreateTween().SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo);
+		scrollTween.TweenProperty(verticalScrollBox, "scroll_vertical", scrollLevel, 0.3f);
+	}
+
+	//private void OnNavButton(TreeItem item, long column, long id, long mouseButtonIndex)
+	//{
+	//    int scrollLevel = (int)((Control)item.GetMetadata(1)).Position.Y;
+	//    var scrollTween = GetTree().CreateTween().SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo);
+	//    scrollTween.TweenProperty(verticalScrollBox, "scroll_vertical", scrollLevel, 0.3f);
+	//}
+
+
+	private void UpdateShopOfferResourceLoading()
+	{
+		var compareRect = verticalScrollBox.GetGlobalRect();
+		compareRect.Size *= new Vector2(1.5f, 3);
+		foreach (var item in activeOffers)
+		{
+			if (item.GetGlobalRect().Intersects(compareRect))
+			{
+				if (!onScreenOffers.Contains(item))
+				{
+					onScreenOffers.Add(item);
+					item.StartResourceLoadTimer();
+				}
+			}
+			else
+			{
+				if (onScreenOffers.Remove(item))
+					item.CancelResourceLoadTimer();
+			}
+		}
+	}
+
+	public void RegisterOffer(CosmeticShopOfferEntry newOffer) => activeOffers.Add(newOffer);
+
+	static readonly string[] regionSuffixes = [
+		"",
+		"_IE",
+		"_US",
+		"_GB"
+	];
+
+	bool isLoadingShop = false;
+	List<CosmeticShopOfferEntry> activeOffers = [];
+	List<CosmeticShopOfferEntry> onScreenOffers = [];
+	List<PageGrouping> activePages = [];
+	record PageGrouping(Control pageHeader, List<CosmeticShopRow> pageRows);
+
+	public void LoadShop() => LoadShop(false);
+	public async void LoadShop(bool force) => await LoadShopTask(force);
+	public async void ForceReloadShop() => await LoadShopTask(true, true);
+	public async Task LoadShopTask(bool forceUIRefresh = false, bool forceFetchShop = false)
+	{
+		if (!IsVisibleInTree() || isLoadingShop || !(CatalogRequests.CosmeticsRequireUpdate() || forceUIRefresh || forceFetchShop || activeOffers.Count == 0))
+			return;
+
+		var sacTask = UpdateSAC();
+
+		try
+		{
+			isLoadingShop = true;
+			filterBlocker.Visible = true;
+			loadingAnim.Visible = true;
+			shopContent.Visible = false;
+
+			activeOffers.Clear();
+			onScreenOffers.Clear();
+			activePages.Clear();
+			navigationPane.Clear();
+
+			var cosmeticShop = await CatalogRequests.GetCosmeticShop(forceFetchShop);
+
+			foreach (var pageChild in pageParent.GetChildren())
+			{
+				pageChild.QueueFree();
+			}
+			foreach (var entryChild in simpleShopParent.GetChildren())
+			{
+				entryChild.QueueFree();
+			}
+			await Helpers.WaitForFrame();
+
+			PrepareFilters();
+
+			if (AppConfig.Get("item_shop", "simple_cosmetics", false))
+			{
+				await GenerateSimpleShop(cosmeticShop);
+			}
+			else
+			{
+				await GenerateComplexShop(cosmeticShop);
+			}
+
+			await Helpers.WaitForFrame();
+			CatalogRequests.CleanCosmeticResourceCache();
+
+			await sacTask;
+		}
+		finally
+		{
+			shopContent.Visible = true;
+			loadingAnim.Visible = false;
+			isLoadingShop = false;
+			filterBlocker.Visible = false;
+		}
+	}
+
+	async Task GenerateSimpleShop(JsonObject cosmeticShop)
+	{
+		navContainer.Visible = false;
+		navToggle.Visible = false;
+		int opCount = 0;
+		int tileSize = AppConfig.Get("item_shop", "simple_cosmetic_tilesize", 150);
+		var shopProcess = simpleShopParent.ProcessMode;
+		try
+		{
+			simpleShopParent.ProcessMode = ProcessModeEnum.Disabled;
+
+			var entries = cosmeticShop.SelectMany(c =>
+				c.Value.AsObject().SelectMany(s =>
+					s.Value.AsArray().SelectMany(p =>
+						p.AsObject().AsEnumerable()
+					)
+				)
+			);
+
+			//if filtering by popular, order by rank here
+			if (baseFilterValue == 4)
+				entries = entries.OrderBy(e => e.Value["bestsellerRank"]?.GetValue<int>() ?? 0);//todo: use region specific ranks
+
+			foreach (var entryData in entries)
+			{
+				var entry = shopEntryScene.Instantiate<CosmeticShopOfferEntry>();
+				entry.CustomMinimumSize = new(tileSize, tileSize);
+				simpleShopParent.AddChild(entry);
+				entry.PopulateEntry(entryData.Value.AsObject(), Vector2.One);
+				RegisterOffer(entry);
+				entry.Visible = IsValidEntry(entry);
+				if (opCount > simpleOpsPerFrame)
+				{
+					UpdateShopOfferResourceLoading();
+					await Helpers.WaitForFrame();
+					opCount = 0;
+				}
+				opCount++;
+			}
+
+			/* old bad nested loops
+            foreach (var category in cosmeticShop)
             {
-                //load shop
-                await LoadShop();
-                //CurrencyHighlight.Instance?.SetCurrencyTemplate(GameItemTemplate.Get("AccountResource:eventcurrency_scaling"));
-            }
-        };
-
-        navigationPane.CellSelected += OnNavSelected;
-        sacButton.Pressed += OpenSACPrompt;
-
-        requireAddedToday.Pressed += ApplyFilters;
-        requireLeavingSoon.Pressed += ApplyFilters;
-        includeDiscountBundles.Pressed += ApplyFilters;
-        foreach (var button in newOrOldFilters)
-        {
-            button.Pressed += ApplyFilters;
-        }
-        foreach (var button in typeFilters)
-        {
-            button.Pressed += ApplyFilters;
-        }
-        resetTypeFilters.Pressed += () =>
-        {
-            foreach (var item in typeFilters)
-            {
-                item.ButtonPressed = Input.IsKeyPressed(Key.Shift);
-            }
-            ApplyFilters();
-        };
-        navContainer.Visible = AppConfig.Get("item_shop", "navigation_visible", true) && !AppConfig.Get("item_shop", "simple_cosmetics", false);
-        requireAddedToday.ButtonPressed = AppConfig.Get("item_shop", "auto_filter_new", false);
-
-        AppConfig.OnConfigChanged += OnConfigChanged;
-        RefreshTimerController.OnHourChanged += OnHourChanged;
-        GameAccount.ActiveAccountChanged += OnActiveAccountChanged;
-    }
-    private async void OnActiveAccountChanged() => await UpdateSAC();
-
-    private async Task UpdateSAC()
-    {
-        var account = GameAccount.activeAccount;
-        if (!await account.Authenticate())
-            return;
-
-        string currentSACCode = await account.GetSACCode(false);
-        if (await account.GetSACTime() > 1 && AppConfig.Get("automation", "creatorcode", false))
-        {
-            //GD.Print(currentSACCode);
-            await account.SetSACCode(currentSACCode);
-        }
-        sacButton.Text = await account.IsSACExpired() ? "None" : currentSACCode;
-    }
-
-    private void OnConfigChanged(string section, string key, JsonValue value)
-    {
-        if (section != "item_shop")
-            return;
-        if(key=="simple_cosmetics")
-        {
-            if (AppConfig.Get<bool>("item_shop", "simple_cosmetics"))
-                navContainer.Visible = false;
-            else
-                navContainer.Visible = AppConfig.Get("item_shop", "navigation_visible", true);
-
-            activeOffers.Clear();
-            if (IsVisibleInTree())
-                LoadShop(true).StartTask();
-        }
-        if (key == "simple_cosmetic_tilesize")
-        {
-            if (AppConfig.Get<bool>("item_shop", "simple_cosmetics") && IsVisibleInTree())
-                LoadShop(true).StartTask();
-        }
-        if (key == "navigation_visible")
-        {
-            if (!AppConfig.Get<bool>("item_shop", "simple_cosmetics"))
-                navContainer.Visible = value.GetValue<bool>();
-        }
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        if (Visible && (Engine.GetPhysicsFrames() % 5) == 1)//only do this every 5 physics ticks
-            UpdateShopOfferResourceLoading();
-    }
-
-    public override void _ExitTree()
-    {
-        AppConfig.OnConfigChanged -= OnConfigChanged;
-        RefreshTimerController.OnHourChanged -= OnHourChanged;
-        GameAccount.ActiveAccountChanged -= OnActiveAccountChanged;
-    }
-
-    private async void OnHourChanged()
-    {
-        if (IsVisibleInTree())
-            await LoadShop();
-    }
-
-    async void OpenSACPrompt()
-    {
-        string subtext = GD.Randf() > 0.85f ?
-            "By enabling the \"Auto-apply creator code\" setting, PegLeg can automatically refresh the duration of your selected code when you load the shop!" :
-            "Whoever you choose to support will recieve 5% of the cost of any Real-Money or VBuck purchases you make";
-        var newCode = await GenericLineEditWindow.ShowLineEdit("Support A Creator!", subtext, sacButton.Text, "Who do you want to support?");
-        if (newCode is null)
-            return;
-
-        using var _ = LoadingOverlay.CreateToken();
-
-        var account = GameAccount.activeAccount;
-        if (!await account.Authenticate())
-            return;
-
-        await account.SetSACCode(newCode);
-        sacButton.Text = await account.IsSACExpired() ? "None" : (await account.GetSACCode());
-
-    }
-
-    private void OnNavSelected()
-    {
-        TreeItem item = navigationPane.GetSelected();
-        if (item.GetChildCount() > 0 && item.GetParent() is not null)
-        {
-            item.Collapsed = !item.Collapsed;
-            if (!item.Collapsed)
-            {
-                navigationPane.CallDeferred("set_selected", item.GetFirstChild(), 0);
-            }
-            else
-            {
-                navigationPane.CallDeferred("set_selected", navigationPane.GetRoot(), 0);
-            }
-            //navigationPane.SetSelected(item.GetFirstChild(), 0);
-            return;
-        }
-        Control metaControl = (Control)item.GetMetadata(0);
-        if (item.GetParent() is null)
-            return;
-        int scrollLevel = (int)metaControl.Position.Y;
-        var scrollTween = GetTree().CreateTween().SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo);
-        scrollTween.TweenProperty(verticalScrollBox, "scroll_vertical", scrollLevel, 0.3f);
-    }
-
-    //private void OnNavButton(TreeItem item, long column, long id, long mouseButtonIndex)
-    //{
-    //    int scrollLevel = (int)((Control)item.GetMetadata(1)).Position.Y;
-    //    var scrollTween = GetTree().CreateTween().SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo);
-    //    scrollTween.TweenProperty(verticalScrollBox, "scroll_vertical", scrollLevel, 0.3f);
-    //}
-
-
-    private void UpdateShopOfferResourceLoading()
-    {
-        var compareRect = verticalScrollBox.GetGlobalRect();
-        compareRect.Size *= new Vector2(1.5f,3);
-        foreach (var item in activeOffers)
-        {
-            if (item.GetGlobalRect().Intersects(compareRect))
-            {
-                if (!onScreenOffers.Contains(item))
+                foreach (var section in category.Value.AsObject())
                 {
-                    onScreenOffers.Add(item);
-                    item.StartResourceLoadTimer();
-                }
-            }
-            else
-            {
-                if (onScreenOffers.Contains(item))
-                {
-                    onScreenOffers.Remove(item);
-                    item.CancelResourceLoadTimer();
-                }
-            }
-        }
-    }
-
-    public void RegisterOffer(CosmeticShopOfferEntry newOffer) => activeOffers.Add(newOffer);
-
-    bool isLoadingShop = false;
-    List<CosmeticShopOfferEntry> activeOffers = new();
-    List<CosmeticShopOfferEntry> onScreenOffers = new();
-    List<PageGrouping> activePages = new();
-    record PageGrouping(Control pageHeader, List<CosmeticShopRow> pageRows);
-
-    public async Task LoadShop(bool force = false)
-    {
-        if (isLoadingShop || !(CatalogRequests.StorefrontRequiresUpdate() || force || activeOffers.Count == 0))
-            return;
-
-        var sacTask = UpdateSAC();
-
-        try
-        {
-            isLoadingShop = true;
-            filterBlocker.Visible = true;
-            loadingAnim.Visible = true;
-            shopContent.Visible = false;
-
-            activeOffers.Clear();
-            onScreenOffers.Clear();
-            activePages.Clear();
-            navigationPane.Clear();
-
-            var cosmeticShop = await CatalogRequests.GetCosmeticShop();
-
-            foreach (var pageChild in pageParent.GetChildren())
-            {
-                pageChild.QueueFree();
-            }
-            foreach (var entryChild in simpleShopParent.GetChildren())
-            {
-                entryChild.QueueFree();
-            }
-            await Helpers.WaitForFrame();
-
-            PrepareFilters();
-
-            if (AppConfig.Get("item_shop", "simple_cosmetics", false))
-            {
-                await GenerateSimpleShop(cosmeticShop);
-            }
-            else
-            {
-                await GenerateComplexShop(cosmeticShop);
-            }
-
-            await Helpers.WaitForFrame();
-            CatalogRequests.CleanCosmeticResourceCache();
-
-            await sacTask;
-        }
-        finally
-        {
-            shopContent.Visible = true;
-            loadingAnim.Visible = false;
-            isLoadingShop = false;
-            filterBlocker.Visible = false;
-        }
-    }
-
-    async Task GenerateSimpleShop(JsonObject cosmeticShop)
-    {
-        navContainer.Visible = false;
-        navToggle.Visible = false;
-        int opCount = 0;
-        int tileSize = AppConfig.Get("item_shop", "simple_cosmetic_tilesize", 150);
-        foreach (var category in cosmeticShop)
-        {
-            foreach (var section in category.Value.AsObject())
-            {
-                foreach (var page in section.Value.AsArray())
-                {
-                    foreach (var entryData in page.AsObject())
+                    foreach (var page in section.Value.AsArray())
                     {
-                        var entry = shopEntryScene.Instantiate<CosmeticShopOfferEntry>();
-                        entry.CustomMinimumSize = new(tileSize, tileSize);
-                        entry.PopulateEntry(entryData.Value.AsObject(), Vector2.One);
-                        simpleShopParent.AddChild(entry);
-                        RegisterOffer(entry);
-                        entry.Visible = IsValidEntry(entry);
-                        if (opCount > simpleOpsPerFrame)
+                        foreach (var entryData in page.AsObject())
                         {
-                            UpdateShopOfferResourceLoading();
-                            await Helpers.WaitForFrame();
-                            opCount = 0;
+                            var entry = shopEntryScene.Instantiate<CosmeticShopOfferEntry>();
+                            entry.CustomMinimumSize = new(tileSize, tileSize);
+                            simpleShopParent.AddChild(entry);
+                            entry.PopulateEntry(entryData.Value.AsObject(), Vector2.One);
+                            RegisterOffer(entry);
+                            entry.Visible = IsValidEntry(entry);
+                            if (opCount > simpleOpsPerFrame)
+                            {
+                                UpdateShopOfferResourceLoading();
+                                await Helpers.WaitForFrame();
+                                opCount = 0;
+                            }
+                            opCount++;
                         }
-                        opCount++;
                     }
                 }
             }
-        }
-    }
+            */
+		}
+		finally
+		{
+			simpleShopParent.ProcessMode = shopProcess;
+		}
+	}
 
-    async Task GenerateComplexShop(JsonObject cosmeticShop)
-    {
-        navContainer.Visible = AppConfig.Get("item_shop", "navigation_visible", true);
-        navToggle.Visible = true;
-        var navRoot = navigationPane.CreateItem();
-        List<CosmeticShopRow> rowsToPopulate = new();
-        foreach (var category in cosmeticShop)
-        {
-            var navCat = navRoot;
-            if (category.Key != "Uncategorised")
-            {
-                navCat = navRoot.CreateChild();
-                navCat.SetText(0, category.Key);
-                navCat.Collapsed = true;
-            }
-            Control firstHeader = null;
-            foreach (var section in category.Value.AsObject())
-            {
-                //spawn shop header
-                var navSection = navCat.CreateChild();
-                navSection.SetText(0, section.Key);
-                var header = shopHeaderScene.Instantiate<Control>();
-                firstHeader ??= header;
-                pageParent.AddChild(header);
-                if (header.GetNode("%HeaderLabel") is Label headerLabel)
-                    headerLabel.Text = section.Key;
-                if (section.Key == "Jam Tracks" && header.GetNode("%JamTrackViewer") is Button jamTrackBtn)
-                {
-                    jamTrackBtn.Pressed += OpenJamTracks;
-                    jamTrackBtn.Visible = true;
-                }
-                //navSec.AddButton(1, navButtonTexture);
-                navSection.SetMetadata(0, header);
-                List<CosmeticShopRow> pageRows = new();
-                //spawn shop pages
-                foreach (var page in section.Value.AsArray())
-                {
-                    var row = shopRowScene.Instantiate<CosmeticShopRow>();
-                    row.PageData = page.AsObject();
-                    pageParent.AddChild(row);
-                    rowsToPopulate.Add(row);
-                    pageRows.Add(row);
-                }
-                activePages.Add(new(header, pageRows));
-            }
-            if (firstHeader is not null)
-            {
-                navCat.SetMetadata(0, firstHeader);
-            }
-        }
-        await Helpers.WaitForFrame();
-        foreach (var page in activePages)
-        {
-            page.pageHeader.Visible = false;
-            foreach (var row in page.pageRows)
-            {
-                await row.PopulatePage(this);
-                UpdateShopOfferResourceLoading();
-                if (row.FilterPage(IsValidEntry))
-                    page.pageHeader.Visible = true;
-                await Helpers.WaitForFrame();
-            }
-        }
-    }
+	async Task GenerateComplexShop(JsonObject cosmeticShop)
+	{
+		navContainer.Visible = AppConfig.Get("item_shop", "navigation_visible", true);
+		navToggle.Visible = true;
+		var navRoot = navigationPane.CreateItem();
+		List<CosmeticShopRow> rowsToPopulate = [];
+		foreach (var category in cosmeticShop)
+		{
+			var navCat = navRoot;
+			if (category.Key != "Uncategorised")
+			{
+				navCat = navRoot.CreateChild();
+				navCat.SetText(0, category.Key);
+				navCat.Collapsed = true;
+			}
+			Control firstHeader = null;
+			foreach (var section in category.Value.AsObject())
+			{
+				//spawn shop header
+				var navSection = navCat.CreateChild();
+				navSection.SetText(0, section.Key);
+				var header = shopHeaderScene.Instantiate<Control>();
+				firstHeader ??= header;
+				pageParent.AddChild(header);
+				if (header.GetNode("%HeaderLabel") is Label headerLabel)
+					headerLabel.Text = section.Key;
+				if (section.Key == "Jam Tracks" && header.GetNode("%JamTrackViewer") is Button jamTrackBtn)
+				{
+					jamTrackBtn.Pressed += OpenJamTracks;
+					jamTrackBtn.Visible = true;
+				}
+				//navSec.AddButton(1, navButtonTexture);
+				navSection.SetMetadata(0, header);
+				List<CosmeticShopRow> pageRows = [];
+				//spawn shop pages
+				foreach (var page in section.Value.AsArray())
+				{
+					var row = shopRowScene.Instantiate<CosmeticShopRow>();
+					row.PageData = page.AsObject();
+					pageParent.AddChild(row);
+					rowsToPopulate.Add(row);
+					pageRows.Add(row);
+				}
+				activePages.Add(new(header, pageRows));
+			}
+			if (firstHeader is not null)
+			{
+				navCat.SetMetadata(0, firstHeader);
+			}
+		}
+		await Helpers.WaitForFrame();
+		foreach (var page in activePages)
+		{
+			page.pageHeader.Visible = false;
+			foreach (var row in page.pageRows)
+			{
+				await row.PopulatePage(this);
+				UpdateShopOfferResourceLoading();
+				if (row.FilterPage(IsValidEntry))
+					page.pageHeader.Visible = true;
+				await Helpers.WaitForFrame();
+			}
+		}
+	}
 
-    void OpenJamTracks() => OS.ShellOpen("https://www.fortnite.com/item-shop/jam-tracks");
+	void OpenJamTracks() => OS.ShellOpen("https://www.fortnite.com/item-shop/jam-tracks");
 
-    void PrepareFilters()
-    {
-        baseFilterValue = 2;
-        for (int i = 0; i < newOrOldFilters.Length; i++)
-        {
-            if (newOrOldFilters[i].ButtonPressed)
-            {
-                baseFilterValue = i;
-                break;
-            }
-        }
-        typeMasks = new bool[Mathf.Max(9, typeFilters.Length)];
-        for (int i = 0; i < typeFilters.Length; i++)
-        {
-            typeMasks[i] = typeFilters[i].ButtonPressed;
-        }
-    }
+	void PrepareFilters()
+	{
+		baseFilterValue = 2;
+		for (int i = 0; i < newOrOldFilters.Length; i++)
+		{
+			if (newOrOldFilters[i].ButtonPressed)
+			{
+				baseFilterValue = i;
+				break;
+			}
+		}
+		typeMasks = new bool[Mathf.Max(9, typeFilters.Length)];
+		for (int i = 0; i < typeFilters.Length; i++)
+		{
+			typeMasks[i] = typeFilters[i].ButtonPressed;
+		}
+	}
 
-    void ApplyFilters()
-    {
-        if (isLoadingShop)
-            return;
+	void ApplyFilters()
+	{
+		if (isLoadingShop)
+			return;
 
-        PrepareFilters();
-        if (AppConfig.Get<bool>("item_shop", "simple_cosmetics"))
-        {
-            foreach (var entry in activeOffers)
-            {
-                entry.Visible = IsValidEntry(entry);
-            }
-        }
-        else
-        {
-            //TODO: apply filters to nav panel
-            foreach (var page in activePages)
-            {
-                page.pageHeader.Visible = false;
-                foreach (var row in page.pageRows)
-                {
-                    if (row.FilterPage(IsValidEntry))
-                        page.pageHeader.Visible = true;
-                }
-            }
-        }
-    }
-    int baseFilterValue = 0;
-    bool[] typeMasks;
-    static readonly string[] filterTypes = new string[]
-    {
-        "AthenaCharacter",
-        "AthenaCharacter",
-        "AthenaBackpack",
-        "AthenaBackpack",
-        "CosmeticShoes",
-        "AthenaPickaxe",
-        "AthenaGlider",
-        "AthenaSkyDiveContrail",
-        "AthenaDance",
-        "AthenaSpray",
-        "AthenaItemWrap",
-        "AthenaMusicPack",
-        "SparksSong",
-        "SparksGuitar",
-        "SparksMic",
-        "SparksDrum",
-        "SparksBass",
-        "SparksKeyboard",
-        "VehicleCosmetics_Wheel",
-        "VehicleCosmetics_Wheel",
-        "VehicleCosmetics_Body",
-        "VehicleCosmetics_Body",
-        "VehicleCosmetics_Skin",
-        "VehicleCosmetics_Skin",
-        "VehicleCosmetics_Booster",
-        "VehicleCosmetics_Booster",
-        "VehicleCosmetics_DriftTrail",
-        "CosmeticVariantToken",
-    };
+		PrepareFilters();
+		if (AppConfig.Get<bool>("item_shop", "simple_cosmetics"))
+		{
+			foreach (var entry in activeOffers)
+			{
+				entry.Visible = IsValidEntry(entry);
+			}
+		}
+		else
+		{
+			//TODO: apply filters to nav panel
+			foreach (var page in activePages)
+			{
+				page.pageHeader.Visible = false;
+				foreach (var row in page.pageRows)
+				{
+					if (row.FilterPage(IsValidEntry))
+						page.pageHeader.Visible = true;
+				}
+			}
+		}
+	}
+	int baseFilterValue = 0;
+	bool[] typeMasks;
+	static readonly HashSet<string>[] filterTypes = 
+	[
+		[
+			"AthenaCharacter",
+			"AthenaBackpack"
+		],
+		[
+			"CosmeticShoes"
+		],
+		[
+			"AthenaPickaxe"
+		],
+		[
+			"AthenaGlider",
+			"AthenaSkyDiveContrail",
+		],
+		[
+			"AthenaDance",
+			"AthenaSpray",
+		],
+		[
+			"AthenaItemWrap",
+		],
+		[
+			"AthenaMusicPack",
+			"SparksSong",
+		],
+		[
+			"SparksGuitar",
+			"SparksMic",
+			"SparksDrum",
+			"SparksBass",
+			"SparksKeyboard",
+		],
+		[
+			"VehicleCosmetics_Wheel",
+			"VehicleCosmetics_Wheel",
+			"VehicleCosmetics_Body",
+			"VehicleCosmetics_Body",
+			"VehicleCosmetics_Skin",
+			"VehicleCosmetics_Skin",
+			"VehicleCosmetics_Booster",
+			"VehicleCosmetics_Booster",
+			"VehicleCosmetics_DriftTrail",
+		],
+		[
+			"CosmeticMimosa",
+			"CosmeticCompanion",
+			"Sidekick",
+		],
+		[
+			"UnknownLegoType",
+			"UnknownLegoType",
+			"UnknownLegoType",
+		],
+	];
+	static readonly HashSet<string> allFilterTypes = [.. filterTypes.SelectMany(f => f)];
 
-    static bool MatchAnyFilterIndex(List<string> toCheck, int startIndex, int length = 1)
-    {
-        for (int i = startIndex; i < startIndex+length; i++)
-        {
-            if (toCheck.Contains(filterTypes[i]))
-                return true;
-        }
-        return false;
-    }
+	bool IsValidEntry(CosmeticShopOfferEntry entry)
+	{
+		if (requireLeavingSoon.ButtonPressed && !entry.metadata.isLeavingSoon)
+			return false;
+		if (requireAddedToday.ButtonPressed && !entry.metadata.isAddedToday)
+			return false;
+		if (!includeDiscountBundles.ButtonPressed && entry.isDiscountBundle)
+			return false;
 
-    static bool MatchAnyFilter(List<string> toCheck)
-    {
-        foreach (var filter in filterTypes)
-        {
-            if (toCheck.Contains(filter))
-                return true;
-        }
-        return false;
-    }
+		if (!(baseFilterValue switch
+		{
+			0 => entry.metadata.isRecentlyNew,
+			1 => entry.metadata.isRecentlyNew,
+			3 => entry.metadata.isOld,
+			4 => entry.metadata.isBestseller,
+			_ => true
+		}))
+			return false;
 
-    bool IsValidEntry(CosmeticShopOfferEntry entry)
-    {
-        if(requireLeavingSoon.ButtonPressed && !entry.metadata.isLeavingSoon)
-            return false;
-        if (requireAddedToday.ButtonPressed && !entry.metadata.isAddedToday)
-            return false;
-        if (!includeDiscountBundles.ButtonPressed && entry.isDiscountBundle)
-            return false;
+		var types = entry.itemTypes;
+		bool anyFilterEnabled = false;
+		for (int i = 0; i < Mathf.Min(typeMasks.Length-1, filterTypes.Length); i++)
+		{
+			if (!typeMasks[i])
+				continue;
+			anyFilterEnabled = true;
+			if (types.Any(filterTypes[i].Contains))
+				return true;
+		}
 
-        if (!(baseFilterValue switch
-        {
-            0 => entry.metadata.isRecentlyNew,
-            1 => entry.metadata.isRecentlyNew,
-            3 => entry.metadata.isOld,
-            4 => entry.metadata.isBestseller,
-            _ => true
-        }))
-            return false;
+		anyFilterEnabled |= typeMasks[^1];
+		if (typeMasks[^1] && !types.Any(allFilterTypes.Contains))
+			return true;
 
-        var types = entry.itemTypes;
-
-
-        if (typeMasks[0] && MatchAnyFilterIndex(types, 0, 5))
-            return true;
-        if (typeMasks[1] && MatchAnyFilterIndex(types, 5))
-            return true;
-        if (typeMasks[2] && MatchAnyFilterIndex(types, 6, 2))
-            return true;
-        if (typeMasks[3] && MatchAnyFilterIndex(types, 8, 2))
-            return true;
-        if (typeMasks[4] && MatchAnyFilterIndex(types, 10))
-            return true;
-        if (typeMasks[5] && MatchAnyFilterIndex(types, 11, 2))
-            return true;
-        if (typeMasks[6] && MatchAnyFilterIndex(types, 13, 5))
-            return true;
-        if (typeMasks[7] && MatchAnyFilterIndex(types, 18, 10))
-            return true;
-        if (typeMasks[8] && !MatchAnyFilter(types))
-            return true;
-
-        if (typeMasks.Any(m => m))
-            return false;
-
-        return true;
-    }
+		return !anyFilterEnabled;
+	}
 
 }
+
+/*
 public class CosmeticShopOfferData
 {
     JsonObject entryData;
@@ -550,7 +640,7 @@ public class CosmeticShopOfferData
     string resourceUrl = null;
 
     public string offerId { get; private set; }
-    public List<string> itemTypes { get; private set; } = new();
+    public List<string> itemTypes { get; private set; } = [];
     public string displayName { get; private set; }
     public string displayType { get; private set; }
     public string tooltip { get; private set; }
@@ -701,9 +791,9 @@ public class CosmeticShopOfferData
 
     //not worth implementing here, cosmetics will be moving into GameOffer soon
     //just wanted to comment this out to prevent compiler warnings about a synchronous async method
-    bool ownershipLoadStarted;
-    public bool ownershipLoadComplete { get; private set; }
-    public event Action OnOwnershipLoaded;
+    //bool ownershipLoadStarted;
+    //public bool ownershipLoadComplete { get; private set; }
+    //public event Action OnOwnershipLoaded;
     //public async void LoadOwnership()
     //{
     //    if (ownershipLoadStarted)
@@ -748,3 +838,4 @@ public class CosmeticShopOfferData
         OnResourceLoaded?.Invoke();
     }
 }
+*/

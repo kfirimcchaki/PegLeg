@@ -3,50 +3,70 @@ using System;
 
 public partial class TooltipFixer : Node
 {
-    [Export]
-    CustomTooltip tooltipControl;
+	[Export]
+	CustomTooltip tooltipControl;
 
-    public override async void _Ready()
-    {
-        tooltipControl.Scale = Vector2.Zero;
-        await Helpers.WaitForFrame();
-        if (tooltipControl?.GetParent() is Node parent)
-            parent.RemoveChild(tooltipControl);
-        tooltipControl.Scale = Vector2.One;
-        tooltipControl.Visible = true;
-        GetTree().NodeAdded += OnNodeAdded;
-    }
+	public override async void _Ready()
+	{
+		tooltipControl.Scale = Vector2.Zero;
+		await Helpers.WaitForFrames(3);
+		if (tooltipControl?.GetParent() is Node parent)
+			parent.RemoveChild(tooltipControl);
+		tooltipControl.Scale = Vector2.One;
+		tooltipControl.Visible = true;
+		GetTree().NodeAdded += OnNodeAdded;
+		inTree = true;
+	}
 
-    public override void _ExitTree()
-    {
-        GetTree().NodeAdded -= OnNodeAdded;
-    }
+	public override void _ExitTree()
+	{
+		GetTree().NodeAdded -= OnNodeAdded;
+		inTree = false;
+	}
 
-    private void OnNodeAdded(Node node)
-    {
-        if (node is not PopupPanel pp)
-            return;
-        pp.TransparentBg = true;
-        pp.Transparent = true;
-        pp.PopupWindow = false;
+	bool inTree = false;
 
-        if (pp.ThemeTypeVariation != "TooltipPanel")
-            return;
+	private void OnNodeAdded(Node node)
+	{
+		if (node is not PopupPanel pp)
+			return;
+		pp.Transparent = true;
+		pp.PopupWindow = false;
 
-        //GD.Print("hello tooltip");
+		if (pp.ThemeTypeVariation != "TooltipPanel" || !inTree)
+			return;
 
-        var label = pp.GetChild<Label>(0);
-        pp.RemoveChild(label);
-        label.QueueFree();
+		//GD.Print("hello tooltip");
 
-        var panel = pp.GetChild<Panel>(0, true);
-        panel.Visible = false;
+		var label = pp.GetChild<Label>(0);
+		pp.RemoveChild(label);
+		label.QueueFree();
 
-        pp.AddChild(tooltipControl);
-        tooltipControl.SetTooltip(label.Text);
-        pp.TreeExiting += () =>
-        {
-            pp.RemoveChild(tooltipControl);
-        };
-    }
+		var panel = pp.GetChild<Panel>(0, true);
+		panel.Visible = false;
+
+		ResetCSF(pp);
+
+		pp.AddChild(tooltipControl);
+		tooltipControl.SetTooltip(label.Text);
+		pp.TreeExiting += () =>
+		{
+			if (inTree)
+				pp.RemoveChild(tooltipControl);
+		};
+	}
+
+	private async void ResetCSF(PopupPanel pp)
+	{
+		tooltipControl.Visible = false;
+		await Helpers.WaitForFrame();
+		try
+		{
+			pp.ContentScaleFactor = 1f;
+			pp.Size = Vector2I.Zero;
+			//tooltip offset is applied here
+			tooltipControl.Visible = true;
+		}
+		catch (ObjectDisposedException) { }
+	}
 }

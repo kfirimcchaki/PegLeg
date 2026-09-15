@@ -1,21 +1,24 @@
-[gd_scene load_steps=29 format=3 uid="uid://wy0yh5wkf4u4"]
+[gd_scene format=3 uid="uid://wy0yh5wkf4u4"]
 
 [ext_resource type="Texture2D" uid="uid://3atkm5dd5sh1" path="res://Images/AspectRatios/2x3Aspect.png" id="1_fvh8r"]
 [ext_resource type="Texture2D" uid="uid://dmki0jynk48ik" path="res://Images/InterfaceIcons/T-SlotIcon-Remove-64.png" id="2_tffkh"]
-[ext_resource type="Shader" uid="uid://cypncf62qx5bc" path="res://Shaders/CardTriangleEffect.tres" id="2_trgqp"]
-[ext_resource type="Texture2D" uid="uid://bkqoyh11npn7c" path="res://Images/InterfaceIcons/TriangleScroll.png" id="3_wupvr"]
-[ext_resource type="Script" path="res://Scripts/ShaderHook.cs" id="4_mmo3m"]
+[ext_resource type="Shader" uid="uid://dwjqthwpe1fq1" path="res://Shaders/InventoryItem.gdshader" id="4_6w01o"]
+[ext_resource type="Script" uid="uid://cf1wi6mkqvf8" path="res://Scripts/ShaderHook.cs" id="4_mmo3m"]
 [ext_resource type="Texture2D" uid="uid://cs2v3mt4il1o2" path="res://Images/InterfaceIcons/BanjoPlaceholders/T-Soldier-HID-Commando-GunTough-R-T01-L.png" id="5_0r6rn"]
-[ext_resource type="Script" path="res://Scripts/UserInterface/ListEntries/GameItemEntry.cs" id="5_rqbak"]
-[ext_resource type="Script" path="res://Scripts/UIElements/FittableTextureRect.cs" id="7_0l2aa"]
+[ext_resource type="Texture2D" uid="uid://vvcpsv0jcehf" path="res://Images/TextureResources/schematicNoise.tres" id="5_2dd5x"]
+[ext_resource type="Texture2D" uid="uid://bihgi4th6uiae" path="res://Images/InterfaceIcons/T-Card-Hero-Anim-Triangle.png" id="5_eckbe"]
+[ext_resource type="Script" uid="uid://dfa7e1y4fpvp2" path="res://Scripts/UserInterface/ListEntries/GameItemEntry.cs" id="5_rqbak"]
 [ext_resource type="Texture2D" uid="uid://lqhr4kxok8jm" path="res://Images/InterfaceIcons/BanjoPlaceholders/T-Icon-Hero-Soldier-CARD.png" id="7_4uv0h"]
-[ext_resource type="Script" path="res://Scripts/ItemTierDisplay.cs" id="8_f4ssv"]
+[ext_resource type="Script" uid="uid://di06wvvqgj620" path="res://Scripts/ItemTierDisplay.cs" id="8_f4ssv"]
 [ext_resource type="Texture2D" uid="uid://1l04r0a5boqq" path="res://Images/InterfaceIcons/Stars-Full-128.png" id="8_mm71c"]
-[ext_resource type="Shader" path="res://Shaders/SelectableHighlight.gdshader" id="10_acofu"]
+[ext_resource type="Shader" uid="uid://bk0yxpo87l5iv" path="res://Shaders/SelectableHighlight.gdshader" id="10_acofu"]
 [ext_resource type="PackedScene" uid="uid://xvc01jygcwse" path="res://Scenes/responsive_button_area.tscn" id="10_psg1y"]
 [ext_resource type="Texture2D" uid="uid://ddjxkaoe8stlj" path="res://Images/InterfaceIcons/T-Icon-ST-CollectionBook-128.png" id="11_seqqo"]
-[ext_resource type="Texture2D" uid="uid://frsfbmj2qyxu" path="res://Images/InterfaceIcons/T_Icon_FavoriteTab_64.png" id="12_koglf"]
 [ext_resource type="Texture2D" uid="uid://07k0gr21gs5e" path="res://Images/InterfaceIcons/T_UI_VKConnectionIndicator_Error_Icon.png" id="12_lmvnc"]
+[ext_resource type="Texture2D" uid="uid://cgc0ggp0b56e5" path="res://Images/InterfaceIcons/T-Icon-Favorite-64.png" id="14_2dd5x"]
+[ext_resource type="Material" uid="uid://cwag018nxlpqn" path="res://Shaders/Materials/ShadowImageMat.tres" id="15_cxgs0"]
+[ext_resource type="Script" uid="uid://cti7ijxybv3iw" path="res://Scripts/ContextMenu/ContextMenuHook.cs" id="16_6w01o"]
+[ext_resource type="Resource" uid="uid://dyqo6r13rubag" path="res://Scripts/ContextMenu/ComponentLists/InventoryItemCtxList.tres" id="18_2dd5x"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_740hm"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
@@ -24,26 +27,25 @@ border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 
-[sub_resource type="Gradient" id="Gradient_o50gb"]
-colors = PackedColorArray(0.9, 0.9, 0.9, 1, 0.6, 0.6, 0.6, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_4arc4"]
-gradient = SubResource("Gradient_o50gb")
-fill = 1
-fill_from = Vector2(0.5, 1)
-fill_to = Vector2(0.5, 0)
-metadata/_snap_enabled = true
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_tybqm"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2dd5x"]
 resource_local_to_scene = true
-shader = ExtResource("2_trgqp")
-shader_parameter/TriangleTint = Color(0.9, 0.9, 0.9, 1)
-shader_parameter/TimeOffset = 0.0
+shader = ExtResource("4_6w01o")
+shader_parameter/ControlSize = Vector2(86, 106)
+shader_parameter/Fit = false
+shader_parameter/VerticalShift = 0.5
+shader_parameter/IsHero = true
+shader_parameter/IsSchematic = false
+shader_parameter/IsPack = true
+shader_parameter/Noise = ExtResource("5_2dd5x")
+shader_parameter/HeroTriangles = ExtResource("5_eckbe")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uxue7"]
 bg_color = Color(0.453125, 0.496094, 0.644531, 1)
 skew = Vector2(0.5, 0)
 corner_radius_bottom_right = 3
+
+[sub_resource type="Gradient" id="Gradient_o50gb"]
+colors = PackedColorArray(0.9, 0.9, 0.9, 1, 0.6, 0.6, 0.6, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_p04va"]
 gradient = SubResource("Gradient_o50gb")
@@ -51,201 +53,139 @@ fill = 1
 fill_from = Vector2(0.1, 0.9)
 metadata/_snap_enabled = true
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d0iaq"]
-bg_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-expand_margin_left = 1.0
-expand_margin_top = 1.0
-expand_margin_right = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wraxx"]
-bg_color = Color(1, 1, 1, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vt785"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_t4sgp"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yfccu"]
 shader = ExtResource("10_acofu")
-shader_parameter/time = 91025.4
+shader_parameter/time = 0.632
 
-[sub_resource type="Gradient" id="Gradient_ir67n"]
-offsets = PackedFloat32Array(0, 0.992042)
-colors = PackedColorArray(0.25, 0.25, 0.25, 1, 0, 0, 0, 0)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_2nm7o"]
-gradient = SubResource("Gradient_ir67n")
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(0.5, 0)
-metadata/_snap_enabled = true
-
-[node name="InventoryEntry" type="MarginContainer" node_paths=PackedStringArray("selectionGraphics")]
-custom_minimum_size = Vector2(80, 120)
-offset_right = 82.0
-offset_bottom = 123.0
+[node name="InventoryEntry" type="MarginContainer" unique_id=262566370 node_paths=PackedStringArray("selectionGraphics")]
+custom_minimum_size = Vector2(90, 135)
+offset_right = 90.0
+offset_bottom = 135.0
 script = ExtResource("5_rqbak")
+compactifyAmount = true
 autoLinkToViewer = false
 autoLinkToRecycleSelection = true
 autoSelectOnPress = false
+packImageAsSubtype = false
 selectionGraphics = NodePath("ItemContent/SelectionVisuals")
 
-[node name="Empty" type="MarginContainer" parent="."]
+[node name="Empty" type="MarginContainer" parent="." unique_id=1512271124]
 visible = false
 layout_mode = 2
 
-[node name="Panel" type="Panel" parent="Empty"]
+[node name="Panel" type="Panel" parent="Empty" unique_id=1780283243]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_740hm")
 
-[node name="MarginContainer" type="MarginContainer" parent="Empty"]
+[node name="MarginContainer" type="MarginContainer" parent="Empty" unique_id=826956294]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="TextureRect" type="TextureRect" parent="Empty/MarginContainer"]
+[node name="TextureRect" type="TextureRect" parent="Empty/MarginContainer" unique_id=510644879]
 layout_mode = 2
 texture = ExtResource("2_tffkh")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ItemContent" type="MarginContainer" parent="."]
+[node name="ItemContent" type="MarginContainer" parent="." unique_id=2030528173]
 layout_mode = 2
 
-[node name="AspectTexture" type="TextureRect" parent="ItemContent"]
+[node name="AspectTexture" type="TextureRect" parent="ItemContent" unique_id=1533324994]
 self_modulate = Color(1, 1, 1, 0)
 layout_mode = 2
 texture = ExtResource("1_fvh8r")
 expand_mode = 5
 
-[node name="EdgePadding" type="MarginContainer" parent="ItemContent"]
+[node name="EdgePadding" type="MarginContainer" parent="ItemContent" unique_id=635837583]
 layout_mode = 2
 theme_override_constants/margin_left = 2
 theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="GameItem" type="VBoxContainer" parent="ItemContent/EdgePadding"]
+[node name="GameItem" type="VBoxContainer" parent="ItemContent/EdgePadding" unique_id=42922990]
 clip_contents = true
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem"]
+[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem" unique_id=1314792133]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="IconWindow" type="Control" parent="ItemContent/EdgePadding/GameItem/MarginContainer"]
-clip_contents = true
-layout_mode = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/IconWindow"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-grow_horizontal = 2
-theme_override_constants/margin_left = -2
-theme_override_constants/margin_top = -2
-theme_override_constants/margin_right = -2
-theme_override_constants/margin_bottom = -2
-
-[node name="AspectTexture" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/IconWindow/MarginContainer"]
-self_modulate = Color(1, 1, 1, 0)
-layout_mode = 2
-texture = ExtResource("1_fvh8r")
-expand_mode = 5
-
-[node name="RarityGradient" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/IconWindow/MarginContainer/AspectTexture"]
+[node name="ItemIcon" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer" unique_id=2064999133]
 self_modulate = Color(0.901961, 0.509804, 0, 1)
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = SubResource("GradientTexture2D_4arc4")
-expand_mode = 1
-
-[node name="RarityTriangles" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/IconWindow/MarginContainer/AspectTexture"]
-self_modulate = Color(0.9, 0.51, 0, 1)
-texture_repeat = 2
-material = SubResource("ShaderMaterial_tybqm")
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("3_wupvr")
-expand_mode = 1
-
-[node name="ItemIcon" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/IconWindow/MarginContainer/AspectTexture"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+material = SubResource("ShaderMaterial_2dd5x")
+layout_mode = 2
 texture = ExtResource("5_0r6rn")
 expand_mode = 1
-stretch_mode = 6
-script = ExtResource("7_0l2aa")
+script = ExtResource("4_mmo3m")
+syncControlSize = true
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer" unique_id=741266178]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer" unique_id=199824866]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Space" type="Control" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer" unique_id=325757430]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Space" type="Control" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="PowerLevel" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space"]
+[node name="PowerLevel" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space" unique_id=405653825]
 layout_mode = 1
 offset_right = 17.0
 offset_bottom = 17.0
-theme_override_constants/margin_left = -2
+theme_override_constants/margin_left = -1
 theme_override_constants/margin_top = -2
 
-[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/PowerLevel"]
+[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/PowerLevel" unique_id=2129267811]
 layout_mode = 2
 theme_override_constants/margin_right = -4
 
-[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/PowerLevel/MarginContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/PowerLevel/MarginContainer" unique_id=1263748367]
 clip_contents = true
 layout_mode = 2
 theme_override_constants/margin_left = -4
 theme_override_constants/margin_right = 4
 
-[node name="Panel2" type="Panel" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/PowerLevel/MarginContainer/MarginContainer"]
+[node name="Panel2" type="Panel" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/PowerLevel/MarginContainer/MarginContainer" unique_id=1776461217]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_uxue7")
 
-[node name="HBoxContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/PowerLevel"]
+[node name="HBoxContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/PowerLevel" unique_id=1257382176]
 layout_mode = 2
 theme_override_constants/margin_left = 3
 theme_override_constants/margin_right = 6
 
-[node name="PowerLevelLabel" type="Label" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/PowerLevel/HBoxContainer"]
+[node name="PowerLevelLabel" type="Label" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/PowerLevel/HBoxContainer" unique_id=1168634881]
 layout_mode = 2
 theme_override_constants/line_spacing = 0
 theme_override_font_sizes/font_size = 12
 text = "130"
 horizontal_alignment = 1
 
-[node name="Collectable" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space"]
+[node name="Collectable" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space" unique_id=1983410344]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 1.0
@@ -257,93 +197,102 @@ offset_bottom = 2.0
 grow_horizontal = 0
 grow_vertical = 0
 
-[node name="TextureRect" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/Collectable"]
-self_modulate = Color(0, 0, 0, 1)
+[node name="TextureRect2" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/Collectable" unique_id=326691565]
+visible = false
+self_modulate = Color(0.53098965, 0.9850764, 1, 1)
+material = ExtResource("15_cxgs0")
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture = ExtResource("11_seqqo")
 expand_mode = 1
 
-[node name="TextureRect2" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/Collectable/TextureRect"]
-custom_minimum_size = Vector2(16, 16)
+[node name="NotificationLabel" type="Label" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/Collectable/TextureRect2" unique_id=296435351]
 layout_mode = 1
 anchors_preset = -1
+anchor_left = 1.0
 anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -1.0
-offset_top = -1.0
-offset_right = -1.0
-offset_bottom = -1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("11_seqqo")
-expand_mode = 1
+offset_left = -7.955
+offset_top = -1.105
+offset_right = 1.0450001
+offset_bottom = 12.895
+grow_horizontal = 0
+rotation = -0.1309
+scale = Vector2(0.635, 0.635)
+pivot_offset_ratio = Vector2(0.77, 0.145)
+theme_override_colors/font_outline_color = Color(0, 0.61666656, 1, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 16
+text = " ! "
+horizontal_alignment = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer" unique_id=1228603064]
 layout_mode = 2
 
-[node name="ColorRect" type="ColorRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer"]
+[node name="ColorRect" type="ColorRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer" unique_id=1865376267]
 layout_mode = 2
-color = Color(0, 0, 0, 0.392157)
+color = Color(0, 0, 0, 0.196078)
 
-[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer" unique_id=487332987]
 layout_mode = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer"]
-custom_minimum_size = Vector2(0, 20)
+[node name="HBoxContainer" type="HBoxContainer" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer" unique_id=749024753]
 layout_mode = 2
 
-[node name="Subtype" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer"]
+[node name="Subtype" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer" unique_id=260806156]
+material = ExtResource("15_cxgs0")
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+texture = ExtResource("7_4uv0h")
+expand_mode = 5
+
+[node name="Tersiary" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer" unique_id=1362726478]
+material = ExtResource("15_cxgs0")
+custom_minimum_size = Vector2(20, 0)
 layout_mode = 2
 texture = ExtResource("7_4uv0h")
 expand_mode = 3
 
-[node name="Tersiary" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer"]
-layout_mode = 2
-texture = ExtResource("7_4uv0h")
-expand_mode = 3
-
-[node name="Amount" type="Label" parent="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer"]
+[node name="Amount" type="Label" parent="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer" unique_id=1126641415]
 visible = false
 layout_mode = 2
 text = "999"
 horizontal_alignment = 2
+text_overrun_behavior = 3
 
-[node name="TierAndXp" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem"]
+[node name="TierAndXp" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem" unique_id=861818453]
 layout_mode = 2
 
-[node name="XPTierRarityGradient" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp"]
+[node name="XPTierRarityGradient" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp" unique_id=1570462911]
 self_modulate = Color(0.901961, 0.509804, 0, 1)
 layout_mode = 2
 texture = SubResource("GradientTexture2D_p04va")
 expand_mode = 1
 
-[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/TierAndXp"]
+[node name="MarginContainer" type="MarginContainer" parent="ItemContent/EdgePadding/GameItem/TierAndXp" unique_id=129308680]
 layout_mode = 2
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 4
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer" unique_id=1346367148]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="ProgressBar" type="ProgressBar" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer"]
+[node name="ProgressBar" type="ProgressBar" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer" unique_id=99975215]
 custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
-theme_override_styles/background = SubResource("StyleBoxFlat_d0iaq")
-theme_override_styles/fill = SubResource("StyleBoxFlat_wraxx")
+theme_type_variation = &"ItemLevelProgress"
 min_value = -0.07
 max_value = 1.0
 show_percentage = false
 
-[node name="TierController" type="HBoxContainer" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer" node_paths=PackedStringArray("tierImages")]
-custom_minimum_size = Vector2(0, 14)
+[node name="TierController" type="HBoxContainer" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer" unique_id=1604919168 node_paths=PackedStringArray("tierImages")]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
 theme_override_constants/separation = 0
 alignment = 1
@@ -351,68 +300,74 @@ script = ExtResource("8_f4ssv")
 tierImages = [NodePath("TextureRect"), NodePath("TextureRect2"), NodePath("TextureRect3"), NodePath("TextureRect4"), NodePath("TextureRect5")]
 superchargeColor = Color(0, 0.708333, 0.85, 1)
 
-[node name="TextureRect" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController"]
+[node name="TextureRect" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController" unique_id=401869122]
 self_modulate = Color(0, 0.708333, 0.85, 1)
 layout_mode = 2
 texture = ExtResource("8_mm71c")
 expand_mode = 3
 
-[node name="TextureRect2" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController"]
+[node name="TextureRect2" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController" unique_id=1229923006]
 layout_mode = 2
 texture = ExtResource("8_mm71c")
 expand_mode = 3
 
-[node name="TextureRect3" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController"]
+[node name="TextureRect3" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController" unique_id=1074172615]
 layout_mode = 2
 texture = ExtResource("8_mm71c")
 expand_mode = 3
 
-[node name="TextureRect4" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController"]
+[node name="TextureRect4" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController" unique_id=591795869]
 layout_mode = 2
 texture = ExtResource("8_mm71c")
 expand_mode = 3
 
-[node name="TextureRect5" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController"]
+[node name="TextureRect5" type="TextureRect" parent="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController" unique_id=1922942685]
 layout_mode = 2
 texture = ExtResource("8_mm71c")
 expand_mode = 3
 
-[node name="RarityOutline" type="Panel" parent="ItemContent"]
+[node name="RarityOutline" type="Panel" parent="ItemContent" unique_id=431683393]
 self_modulate = Color(0.901961, 0.509804, 0, 1)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_vt785")
 
-[node name="AspectRatioContainer" type="AspectRatioContainer" parent="ItemContent/RarityOutline"]
-custom_minimum_size = Vector2(24, 0)
+[node name="WarningOutline" type="Panel" parent="ItemContent/RarityOutline" unique_id=955996123]
+visible = false
+self_modulate = Color(1, 0, 0, 1)
 layout_mode = 1
-anchors_preset = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_t4sgp")
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="ItemContent/RarityOutline" unique_id=1875060157]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 1
+anchors_preset = -1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -26.0
-offset_top = 2.0
+offset_top = -2.0
 offset_right = -2.0
-offset_bottom = 2.0
 grow_horizontal = 0
 stretch_mode = 0
 alignment_vertical = 0
 
-[node name="Control" type="Control" parent="ItemContent/RarityOutline/AspectRatioContainer"]
+[node name="Control" type="Control" parent="ItemContent/RarityOutline/AspectRatioContainer" unique_id=1973479875]
 layout_mode = 2
 
-[node name="FavouriteBanner" type="TextureRect" parent="ItemContent/RarityOutline/AspectRatioContainer/Control"]
-self_modulate = Color(0.00474242, 0.193957, 0.838453, 1)
+[node name="FavouriteBanner" type="TextureRect" parent="ItemContent/RarityOutline/AspectRatioContainer/Control" unique_id=582288499]
 layout_mode = 1
 anchors_preset = -1
-anchor_top = -0.4
 anchor_right = 1.0
-anchor_bottom = 0.6
+anchor_bottom = 1.0
 grow_horizontal = 2
-grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("12_koglf")
+texture = ExtResource("14_2dd5x")
 expand_mode = 1
 
-[node name="NotificationLabel" type="Label" parent="ItemContent/RarityOutline"]
+[node name="NotificationLabel" type="Label" parent="ItemContent/RarityOutline" unique_id=1435270321]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -429,13 +384,13 @@ text = " ! "
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SelectionVisuals" type="CheckButton" parent="ItemContent"]
+[node name="SelectionVisuals" type="CheckButton" parent="ItemContent" unique_id=524808720]
 self_modulate = Color(1, 1, 1, 0)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"EmptyCheckButton"
 
-[node name="SelectionFX" type="ColorRect" parent="ItemContent/SelectionVisuals"]
+[node name="SelectionFX" type="ColorRect" parent="ItemContent/SelectionVisuals" unique_id=1674922151]
 visible = false
 self_modulate = Color(1, 1, 1, 0.588235)
 material = SubResource("ShaderMaterial_yfccu")
@@ -448,8 +403,9 @@ grow_vertical = 2
 color = Color(0, 1, 0, 1)
 script = ExtResource("4_mmo3m")
 syncTimeProperty = true
+modTime = 1.0
 
-[node name="MarginContainer" type="MarginContainer" parent="ItemContent/SelectionVisuals/SelectionFX"]
+[node name="MarginContainer" type="MarginContainer" parent="ItemContent/SelectionVisuals/SelectionFX" unique_id=304630564]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -461,54 +417,66 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="MarginContainer" type="MarginContainer" parent="ItemContent/SelectionVisuals/SelectionFX/MarginContainer"]
-layout_mode = 2
-theme_override_constants/margin_left = -3
-theme_override_constants/margin_top = -3
-theme_override_constants/margin_right = -3
-theme_override_constants/margin_bottom = -3
-
-[node name="MarkerBG" type="TextureRect" parent="ItemContent/SelectionVisuals/SelectionFX/MarginContainer/MarginContainer"]
-layout_mode = 2
-texture = SubResource("GradientTexture2D_2nm7o")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Marker" type="TextureRect" parent="ItemContent/SelectionVisuals/SelectionFX/MarginContainer"]
+[node name="Marker" type="TextureRect" parent="ItemContent/SelectionVisuals/SelectionFX/MarginContainer" unique_id=1757004774]
+material = ExtResource("15_cxgs0")
 layout_mode = 2
 texture = ExtResource("11_seqqo")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Tooltip" type="Control" parent="."]
+[node name="Tooltip" type="Control" parent="." unique_id=1725377709]
 layout_mode = 2
+mouse_filter = 1
 
-[node name="Responsive Button Area" parent="." instance=ExtResource("10_psg1y")]
+[node name="InvEntryTooltipCtx" type="Node" parent="Tooltip" unique_id=635282061 node_paths=PackedStringArray("itemSource")]
+script = ExtResource("16_6w01o")
+itemSource = NodePath("../..")
+attachHorizontally = true
+componentList = ExtResource("18_2dd5x")
+
+[node name="Responsive Button Area" parent="." unique_id=1323936485 instance=ExtResource("10_psg1y")]
 layout_mode = 2
 outlinePadding = 0.0
 
-[node name="OverflowWarningPopup" type="Control" parent="."]
+[node name="InvEntryCtx" type="Node" parent="Responsive Button Area" unique_id=1071860361 node_paths=PackedStringArray("itemSource")]
+script = ExtResource("16_6w01o")
+itemSource = NodePath("../..")
+attachHorizontally = true
+componentList = ExtResource("18_2dd5x")
+
+[node name="OverflowWarningPopup" type="Control" parent="." unique_id=1233357232]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
 
-[node name="Button" type="MarginContainer" parent="OverflowWarningPopup"]
+[node name="Button" type="MarginContainer" parent="OverflowWarningPopup" unique_id=1245328524]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -10.0
-offset_right = 10.0
-offset_bottom = 20.0
+offset_left = -27.0
+offset_top = 15.0
+offset_right = 27.0
+offset_bottom = 35.0
 grow_horizontal = 2
 tooltip_text = "Warning: This item cant fit in your inventory! make some room quickly, or it might get deleted!"
 
-[node name="Panel" type="Panel" parent="OverflowWarningPopup/Button"]
+[node name="Panel" type="Panel" parent="OverflowWarningPopup/Button" unique_id=451323323]
 layout_mode = 2
 theme_type_variation = &"PanelButton"
 
-[node name="TextureRect" type="TextureRect" parent="OverflowWarningPopup/Button"]
+[node name="MarginContainer" type="MarginContainer" parent="OverflowWarningPopup/Button" unique_id=1799047251]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_right = 6
+
+[node name="HBoxContainer" type="HBoxContainer" parent="OverflowWarningPopup/Button/MarginContainer" unique_id=1584351456]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TextureRect" type="TextureRect" parent="OverflowWarningPopup/Button/MarginContainer/HBoxContainer" unique_id=344065988]
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -516,36 +484,50 @@ size_flags_vertical = 4
 texture = ExtResource("12_lmvnc")
 expand_mode = 1
 
-[connection signal="AmmoIconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Tersiary" method="set_texture"]
-[connection signal="AmountChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer/Amount" method="set_text"]
-[connection signal="AmountVisibility" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer/Amount" method="set_visible"]
+[node name="Label" type="Label" parent="OverflowWarningPopup/Button/MarginContainer/HBoxContainer" unique_id=1284447126]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 8
+text = "Overflow"
+
+[connection signal="AmmoIconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Tersiary" method="set_texture"]
+[connection signal="AmountChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer/Amount" method="set_text"]
+[connection signal="AmountVisibility" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer/Amount" method="set_visible"]
 [connection signal="CanBeLeveledChanged" from="." to="ItemContent/EdgePadding/GameItem/TierAndXp" method="set_visible"]
 [connection signal="FavoriteChanged" from="." to="ItemContent/RarityOutline/AspectRatioContainer/Control/FavouriteBanner" method="set_visible"]
-[connection signal="IconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/IconWindow/MarginContainer/AspectTexture/ItemIcon" method="set_texture"]
-[connection signal="IconFit" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/IconWindow/MarginContainer/AspectTexture/ItemIcon" method="SetFit"]
+[connection signal="IconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/ItemIcon" method="set_texture"]
+[connection signal="IconFit" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/ItemIcon" method="SetShaderBool" binds= ["Fit"]]
 [connection signal="InteractableChanged" from="." to="Responsive Button Area" method="set_visible"]
-[connection signal="IsCollectable" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/Collectable" method="set_visible"]
+[connection signal="IsCollectable" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/Collectable" method="set_visible"]
+[connection signal="IsHero" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/ItemIcon" method="SetShaderBool" binds= ["IsHero"]]
+[connection signal="IsPack" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/ItemIcon" method="SetShaderBool" binds= ["IsPack"]]
+[connection signal="IsSchematic" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/ItemIcon" method="SetShaderBool" binds= ["IsSchematic"]]
 [connection signal="ItemDoesExist" from="." to="ItemContent" method="set_visible"]
 [connection signal="ItemDoesNotExist" from="." to="Empty" method="set_visible"]
 [connection signal="LevelProgressChanged" from="." to="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/ProgressBar" method="set_value"]
 [connection signal="MaxTierChanged" from="." to="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController" method="SetMaxTier"]
 [connection signal="NameChanged" from="." to="Responsive Button Area" method="set_tooltip_text"]
 [connection signal="NotificationChanged" from="." to="ItemContent/RarityOutline/NotificationLabel" method="set_visible"]
+[connection signal="OverflowWarning" from="." to="ItemContent/RarityOutline/WarningOutline" method="set_visible"]
 [connection signal="OverflowWarning" from="." to="OverflowWarningPopup" method="set_visible"]
-[connection signal="PersonalityIconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Subtype" method="set_texture"]
-[connection signal="RarityChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/IconWindow/MarginContainer/AspectTexture/RarityGradient" method="set_self_modulate"]
-[connection signal="RarityChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/IconWindow/MarginContainer/AspectTexture/RarityTriangles" method="set_self_modulate"]
+[connection signal="PackIconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/ItemIcon" method="SetShaderTexture" binds= ["PackIcon"]]
+[connection signal="PersonalityIconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Subtype" method="set_texture"]
+[connection signal="RarityChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/ItemIcon" method="set_self_modulate"]
 [connection signal="RarityChanged" from="." to="ItemContent/EdgePadding/GameItem/TierAndXp/XPTierRarityGradient" method="set_self_modulate"]
 [connection signal="RarityChanged" from="." to="ItemContent/RarityOutline" method="set_self_modulate"]
-[connection signal="RatingChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/PowerLevel/HBoxContainer/PowerLevelLabel" method="set_text"]
-[connection signal="RatingVisibility" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/Space/PowerLevel" method="set_visible"]
+[connection signal="RatingChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/PowerLevel/HBoxContainer/PowerLevelLabel" method="set_text"]
+[connection signal="RatingVisibility" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/Space/PowerLevel" method="set_visible"]
 [connection signal="SelectionMarkerChanged" from="." to="ItemContent/SelectionVisuals/SelectionFX/MarginContainer/Marker" method="set_texture"]
 [connection signal="SelectionTintChanged" from="." to="ItemContent/SelectionVisuals/SelectionFX" method="set_color"]
-[connection signal="SubtypeIconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Subtype" method="set_texture"]
+[connection signal="SubtypeIconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Subtype" method="set_texture"]
 [connection signal="SuperchargeChanged" from="." to="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController" method="SetSuperchargedTier"]
-[connection signal="SurvivorBoostIconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Tersiary" method="set_texture"]
+[connection signal="SurvivorBoostIconChanged" from="." to="ItemContent/EdgePadding/GameItem/MarginContainer/HBoxContainer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Tersiary" method="set_texture"]
 [connection signal="TierChanged" from="." to="ItemContent/EdgePadding/GameItem/TierAndXp/MarginContainer/VBoxContainer/TierController" method="SetTier"]
 [connection signal="TooltipChanged" from="." to="Tooltip" method="set_tooltip_text"]
 [connection signal="TooltipChanged" from="." to="Responsive Button Area" method="set_tooltip_text"]
 [connection signal="toggled" from="ItemContent/SelectionVisuals" to="ItemContent/SelectionVisuals/SelectionFX" method="set_visible"]
+[connection signal="ContextMenuTriggered" from="Tooltip/InvEntryTooltipCtx" to="." method="Inspect" unbinds=1]
 [connection signal="pressed" from="Responsive Button Area" to="." method="EmitPressedSignal"]
+[connection signal="ContextMenuTriggered" from="Responsive Button Area/InvEntryCtx" to="." method="Inspect" unbinds=1]

@@ -1,0 +1,325 @@
+[gd_scene format=3 uid="uid://pek5poid4c6h"]
+
+[ext_resource type="Script" uid="uid://duejkncuis5w3" path="res://Scripts/UserInterface/ListEntries/MissionRewardEntry.cs" id="1_k64uv"]
+[ext_resource type="Shader" uid="uid://cy6bew7uegfyu" path="res://Shaders/RewardItem.gdshader" id="2_513lh"]
+[ext_resource type="Script" uid="uid://cti7ijxybv3iw" path="res://Scripts/ContextMenu/ContextMenuHook.cs" id="2_okcsl"]
+[ext_resource type="Texture2D" uid="uid://b4bvadxmolhkq" path="res://Images/InterfaceIcons/BanjoPlaceholders/T-Icon-Weapons-SK-SCAR-L.png" id="3_fp1qg"]
+[ext_resource type="Resource" uid="uid://da112m72yfpe2" path="res://Scripts/ContextMenu/ComponentLists/MissionRewardCtxList.tres" id="3_vfoxs"]
+[ext_resource type="Script" uid="uid://xl6hodssfg7i" path="res://Scripts/UserInterface/ListEntries/MissionEntry.cs" id="4_213m2"]
+[ext_resource type="Shader" uid="uid://s05exwnu1w8b" path="res://Shaders/ShadowImage.gdshader" id="5_uualx"]
+[ext_resource type="Texture2D" uid="uid://baml037l0hwl6" path="res://Images/InterfaceIcons/BanjoPlaceholders/T_UI_ICON_S22_SR_SupplyDropMin.png" id="6_8vidr"]
+[ext_resource type="Texture2D" uid="uid://dq8rxm6c5uo11" path="res://Images/InterfaceIcons/T-SlotIcon-Locked-Stroke-32.png" id="7_r0w8g"]
+[ext_resource type="PackedScene" uid="uid://dbrrcnce14w8h" path="res://Scenes/GameItemEntry/mission_collection_highlight_item.tscn" id="8_cngyp"]
+[ext_resource type="Texture2D" uid="uid://ddjxkaoe8stlj" path="res://Images/InterfaceIcons/T-Icon-ST-CollectionBook-128.png" id="11_t8xle"]
+[ext_resource type="Texture2D" uid="uid://0dsm5rygx6qr" path="res://Images/InterfaceIcons/FNIconLib/T_UI_IconLibrary_checkmark_64.png" id="13_asqdj"]
+[ext_resource type="Texture2D" uid="uid://b3m1n41ikas8t" path="res://Images/InterfaceIcons/FNIconLib/T_UI_IconLibrary_Bell_128.png" id="14_miyr2"]
+[ext_resource type="Texture2D" uid="uid://4gudg1raxie8" path="res://Images/AspectRatios/1x1Aspect.png" id="15_5lp03"]
+[ext_resource type="Texture2D" uid="uid://e4cwrq7lup48" path="res://Images/InterfaceIcons/T-SlotIcon-Add-64-White.png" id="16_yyruf"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n4hef"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_023hd"]
+shader = ExtResource("5_uualx")
+shader_parameter/inset = 0.0
+shader_parameter/shade = 0.0
+shader_parameter/shadeAlpha = 0.6000000285
+shader_parameter/base = 0.0
+shader_parameter/scalar = 2.0
+shader_parameter/power = 1.5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b802l"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_t8t80"]
+resource_local_to_scene = true
+shader = ExtResource("2_513lh")
+shader_parameter/ControlSize = Vector2(25, 25)
+shader_parameter/CornerRadius = 3.0
+shader_parameter/Fit = true
+shader_parameter/IsHero = false
+shader_parameter/IsSchematic = false
+shader_parameter/IsFancy = false
+shader_parameter/IsPack = false
+shader_parameter/IsChoice = false
+shader_parameter/MainIcon = ExtResource("3_fp1qg")
+shader_parameter/AltRarity = Color(0.66, 0, 0.594, 1)
+shader_parameter/AltHero = false
+shader_parameter/AltSchematic = false
+shader_parameter/AltFancy = false
+shader_parameter/AltPack = false
+shader_parameter/HeroBeamsOnly = false
+shader_parameter/ChoiceShift = 0.0
+shader_parameter/HideRarity = true
+shader_parameter/HideBar = false
+
+[node name="MissionRewardEntry" type="MarginContainer" unique_id=512148745 node_paths=PackedStringArray("missionEntry", "itemEntry", "missionInspectDependancy")]
+custom_minimum_size = Vector2(260, 25)
+offset_right = 556.0
+offset_bottom = 20.0
+script = ExtResource("1_k64uv")
+missionEntry = NodePath("MissionEntry")
+itemEntry = NodePath("MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem")
+missionInspectDependancy = NodePath("Button/MissionTooltip")
+
+[node name="Button" type="Button" parent="." unique_id=2035664014]
+show_behind_parent = true
+layout_mode = 2
+mouse_filter = 1
+theme_type_variation = &"SubtleButtonRound"
+
+[node name="Ctx" type="Node" parent="Button" unique_id=950363944 node_paths=PackedStringArray("missionSource", "itemSource")]
+script = ExtResource("2_okcsl")
+missionSource = NodePath("../../MissionEntry")
+itemSource = NodePath("../../MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem")
+componentList = ExtResource("3_vfoxs")
+
+[node name="MissionTooltip" type="Control" parent="Button" unique_id=2001201075]
+custom_minimum_size = Vector2(92, 0)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="MissionEntry" type="MarginContainer" parent="." unique_id=519956700 node_paths=PackedStringArray("toDoListContent")]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+script = ExtResource("4_213m2")
+toDoListContent = NodePath("HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer2")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MissionEntry" unique_id=1267303960]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MissionEntry/HBoxContainer" unique_id=142706386]
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TheaterCat" type="Label" parent="MissionEntry/HBoxContainer/HBoxContainer" unique_id=723104068]
+custom_minimum_size = Vector2(19, 0)
+layout_mode = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
+text = "T"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TextureRect" type="Panel" parent="MissionEntry/HBoxContainer/HBoxContainer/TheaterCat" unique_id=1303648632]
+self_modulate = Color(0.688, 0.28, 1, 1)
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_n4hef")
+
+[node name="Icon" type="TextureRect" parent="MissionEntry/HBoxContainer/HBoxContainer" unique_id=189692744]
+material = SubResource("ShaderMaterial_023hd")
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("6_8vidr")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextureRect2" type="TextureRect" parent="MissionEntry/HBoxContainer/HBoxContainer/Icon" unique_id=1911805740]
+self_modulate = Color(1, 0.37, 0.37, 1)
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -12.0
+offset_top = -12.0
+grow_horizontal = 0
+grow_vertical = 0
+tooltip_text = "This mission can't be accessed with this account alone "
+texture = ExtResource("7_r0w8g")
+expand_mode = 3
+
+[node name="PowerLevel" type="Label" parent="MissionEntry/HBoxContainer/HBoxContainer" unique_id=295920822]
+custom_minimum_size = Vector2(35, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "144"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="MissionEntry/HBoxContainer" unique_id=633279153]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="ColorRect" type="Panel" parent="MissionEntry/HBoxContainer/MarginContainer" unique_id=488909651]
+modulate = Color(1, 1, 1, 0.19607843)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_b802l")
+
+[node name="ColorRect2" type="ColorRect" parent="MissionEntry/HBoxContainer/MarginContainer" unique_id=1593471458]
+custom_minimum_size = Vector2(3, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MissionEntry/HBoxContainer/MarginContainer" unique_id=1648938085]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer" unique_id=1467368915]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer" unique_id=1983976403]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="MissionCollectionHighlightItem" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer" unique_id=357313288 instance=ExtResource("8_cngyp")]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+compactifyAmount = true
+preventInteractability = true
+levelTextPrefix = " Lv "
+
+[node name="Icon" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem" index="0" unique_id=68041144]
+material = SubResource("ShaderMaterial_t8t80")
+mouse_filter = 2
+
+[node name="Label" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem/Icon" index="0" unique_id=2062077297]
+theme_override_constants/outline_size = 5
+
+[node name="Responsive Button Area" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem/Icon" index="3" unique_id=1415142387]
+visible = false
+
+[node name="Label" type="Label" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer" unique_id=1772908320]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Shadowshard Shadowshard Shadowshard "
+text_overrun_behavior = 3
+
+[node name="CollectableIcon" type="TextureRect" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer" unique_id=689731058]
+self_modulate = Color(0.53098965, 0.9850764, 1, 1)
+material = SubResource("ShaderMaterial_023hd")
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("11_t8xle")
+expand_mode = 3
+
+[node name="NotificationLabel" type="Label" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/CollectableIcon" unique_id=184197745]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -7.955
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 12.895
+grow_horizontal = 0
+rotation = -0.1309
+pivot_offset_ratio = Vector2(1, 1)
+theme_override_colors/font_outline_color = Color(0, 0.61666656, 1, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = " ! "
+horizontal_alignment = 2
+
+[node name="ItemLv" type="Label" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer" unique_id=554594560]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = " Lv 46"
+
+[node name="Checkmark" type="TextureRect" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer" unique_id=453039118]
+self_modulate = Color(0, 1, 0.26666665, 1)
+material = SubResource("ShaderMaterial_023hd")
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+tooltip_text = "You've already completed this Mission and claimed this Mission Alert Reward"
+texture = ExtResource("13_asqdj")
+expand_mode = 3
+
+[node name="MarginContainer3" type="MarginContainer" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer" unique_id=1703440662]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer3" unique_id=1373976760]
+material = SubResource("ShaderMaterial_023hd")
+layout_mode = 2
+texture = ExtResource("14_miyr2")
+expand_mode = 3
+
+[node name="MarginContainer2" type="MarginContainer" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer" unique_id=327077591]
+layout_mode = 2
+
+[node name="MarginContainer3" type="MarginContainer" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer2" unique_id=2059577110]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer2/MarginContainer3" unique_id=259613485]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+texture = ExtResource("15_5lp03")
+expand_mode = 3
+
+[node name="Button" type="Button" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer2/MarginContainer3" unique_id=148889520]
+layout_mode = 2
+tooltip_text = "Add to To-Do List"
+mouse_filter = 1
+theme_type_variation = &"SubtleButtonRound"
+
+[node name="TextureRect" type="TextureRect" parent="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer2/MarginContainer3/Button" unique_id=267304898]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("16_yyruf")
+expand_mode = 1
+
+[connection signal="IsToDo" from="." to="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer2/MarginContainer3/Button" method="set_disabled"]
+[connection signal="MissionCompleteIfAlert" from="." to="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Checkmark" method="set_visible"]
+[connection signal="pressed" from="Button" to="." method="ContextualInspect"]
+[connection signal="IconChanged" from="MissionEntry" to="MissionEntry/HBoxContainer/HBoxContainer/Icon" method="set_texture"]
+[connection signal="MissionLocked" from="MissionEntry" to="MissionEntry/HBoxContainer/HBoxContainer/Icon/TextureRect2" method="set_visible"]
+[connection signal="PowerLevelChanged" from="MissionEntry" to="MissionEntry/HBoxContainer/HBoxContainer/PowerLevel" method="set_text"]
+[connection signal="TheaterCategoryChanged" from="MissionEntry" to="MissionEntry/HBoxContainer/HBoxContainer/TheaterCat" method="set_text"]
+[connection signal="TheaterColorChanged" from="MissionEntry" to="MissionEntry/HBoxContainer/HBoxContainer/TheaterCat/TextureRect" method="set_self_modulate"]
+[connection signal="TooltipChanged" from="MissionEntry" to="Button/MissionTooltip" method="set_tooltip_text"]
+[connection signal="BookmarkChanged" from="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem" to="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer3/TextureRect" method="set_visible"]
+[connection signal="CanBeLeveledChanged" from="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem" to="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/ItemLv" method="set_visible"]
+[connection signal="IsCollectable" from="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem" to="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/CollectableIcon" method="set_visible"]
+[connection signal="LevelTextChanged" from="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem" to="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/ItemLv" method="set_text"]
+[connection signal="NameChanged" from="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem" to="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Label" method="set_text"]
+[connection signal="RarityChanged" from="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem" to="MissionEntry/HBoxContainer/MarginContainer/ColorRect2" method="set_self_modulate"]
+[connection signal="RarityChanged" from="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem" to="MissionEntry/HBoxContainer/MarginContainer/ColorRect" method="set_self_modulate"]
+[connection signal="TooltipChanged" from="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem" to="Button" method="set_tooltip_text"]
+[connection signal="pressed" from="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer2/MarginContainer3/Button" to="." method="AddToList"]
+
+[editable path="MissionEntry/HBoxContainer/MarginContainer/MarginContainer/HBoxContainer/MarginContainer/MissionCollectionHighlightItem"]

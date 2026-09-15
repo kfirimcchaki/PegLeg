@@ -1,0 +1,155 @@
+[gd_scene format=3 uid="uid://bgn5vgsvgrb1u"]
+
+[ext_resource type="Script" uid="uid://cgtewrbm8ev7a" path="res://Scripts/UserInterface/ListEntries/CardPackEntry.cs" id="1_5w7bn"]
+[ext_resource type="Texture2D" uid="uid://dufn5f0er7tu7" path="res://Images/Llamas/PinataStandardPack.png" id="2_78u63"]
+[ext_resource type="PackedScene" uid="uid://xvc01jygcwse" path="res://Scenes/responsive_button_area.tscn" id="2_gakw8"]
+[ext_resource type="Shader" uid="uid://dmt1xhf6kra1d" path="res://Shaders/LlamaPinata.gdshader" id="2_q017l"]
+[ext_resource type="Texture2D" uid="uid://bhgnqhybnnlvq" path="res://Images/InterfaceIcons/T_CardPack_Weapon_IconMask.png" id="3_wu843"]
+[ext_resource type="Script" uid="uid://cf1wi6mkqvf8" path="res://Scripts/ShaderHook.cs" id="5_gboss"]
+[ext_resource type="Texture2D" uid="uid://oswq7qnr3vbd" path="res://Images/InterfaceIcons/FNIconLib/T_UI_IconLibrary_Play_128.png" id="5_vtxue"]
+[ext_resource type="ButtonGroup" uid="uid://cm7rmga74vyve" path="res://Scenes/ViewElements/Llamas/LlamaChoices.tres" id="5_wfxsh"]
+[ext_resource type="Script" uid="uid://cti7ijxybv3iw" path="res://Scripts/ContextMenu/ContextMenuHook.cs" id="9_sqws8"]
+[ext_resource type="Resource" uid="uid://dyqo6r13rubag" path="res://Scripts/ContextMenu/ComponentLists/InventoryItemCtxList.tres" id="10_i88j8"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_me7u8"]
+resource_local_to_scene = true
+shader = ExtResource("2_q017l")
+shader_parameter/packIcon = ExtResource("3_wu843")
+shader_parameter/useMask = true
+
+[sub_resource type="Gradient" id="Gradient_flatg"]
+interpolation_mode = 2
+interpolation_color_space = 1
+colors = PackedColorArray(0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_lqerb"]
+gradient = SubResource("Gradient_flatg")
+fill = 1
+fill_from = Vector2(0.5, 1)
+fill_to = Vector2(0.5, 0.5)
+metadata/_snap_enabled = true
+
+[node name="Cardpack Llama Entry" type="MarginContainer" unique_id=1716305263 node_paths=PackedStringArray("selectionGraphics")]
+script = ExtResource("1_5w7bn")
+includeAmountInName = true
+includeDescriptionInTooltip = true
+selectionGraphics = NodePath("Control/CheckButton")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1142092184]
+custom_minimum_size = Vector2(100, 100)
+clip_contents = true
+layout_mode = 2
+theme_type_variation = &"PanelContainerButton"
+
+[node name="Pinata" type="TextureRect" parent="PanelContainer" unique_id=1500186457]
+material = SubResource("ShaderMaterial_me7u8")
+layout_mode = 2
+texture = ExtResource("2_78u63")
+expand_mode = 3
+script = ExtResource("5_gboss")
+
+[node name="AmountLabel" type="Label" parent="PanelContainer/Pinata" unique_id=1690185086]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -48.0
+offset_top = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+size_flags_vertical = 8
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/line_spacing = 0
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 25
+text = "x1"
+horizontal_alignment = 2
+vertical_alignment = 2
+autowrap_mode = 3
+
+[node name="Gradient" type="TextureRect" parent="PanelContainer/Pinata" unique_id=1486278123]
+self_modulate = Color(0, 0.392157, 1, 1)
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_right = -2.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_transform_enabled = true
+offset_transform_scale = Vector2(1, 1.5)
+offset_transform_pivot_ratio = Vector2(0.5, 1)
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_lqerb")
+expand_mode = 1
+
+[node name="Control" type="Control" parent="." unique_id=1201760392]
+layout_mode = 2
+
+[node name="NotificationLabel" type="Label" parent="Control" unique_id=2021298020]
+visible = false
+layout_mode = 0
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 12.0
+offset_bottom = 25.0
+rotation = -0.1309
+theme_override_colors/font_outline_color = Color(1, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 24
+text = " ! "
+
+[node name="CheckButton" type="CheckButton" parent="Control" unique_id=182856406]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+button_group = ExtResource("5_wfxsh")
+
+[node name="TextureRect" type="TextureRect" parent="Control/CheckButton" unique_id=938282288]
+visible = false
+self_modulate = Color(1, 0, 0, 1)
+z_index = 2
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -1.5708
+pivot_offset = Vector2(12, 12)
+mouse_filter = 2
+texture = ExtResource("5_vtxue")
+expand_mode = 1
+
+[node name="Responsive Button Area" parent="." unique_id=1331857292 instance=ExtResource("2_gakw8")]
+layout_mode = 2
+
+[node name="Ctx" type="Node" parent="Responsive Button Area" unique_id=1676308338 node_paths=PackedStringArray("itemSource")]
+script = ExtResource("9_sqws8")
+itemSource = NodePath("../..")
+componentList = ExtResource("10_i88j8")
+
+[connection signal="AmountChanged" from="." to="PanelContainer/Pinata/AmountLabel" method="set_text"]
+[connection signal="IconChanged" from="." to="PanelContainer/Pinata" method="set_texture"]
+[connection signal="NotificationChanged" from="." to="Control/NotificationLabel" method="set_visible"]
+[connection signal="RarityChanged" from="." to="PanelContainer/Pinata/Gradient" method="set_self_modulate"]
+[connection signal="SubtypeIconChanged" from="." to="PanelContainer/Pinata" method="SetShaderTexture" binds= ["packIcon"]]
+[connection signal="TooltipChanged" from="." to="Responsive Button Area" method="set_tooltip_text"]
+[connection signal="toggled" from="Control/CheckButton" to="Control/CheckButton/TextureRect" method="set_visible"]
+[connection signal="pressed" from="Responsive Button Area" to="." method="EmitPressedSignal"]

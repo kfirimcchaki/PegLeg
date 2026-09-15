@@ -2,159 +2,259 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 
-public partial class MissionCollection : Control, IMissionHighlightProvider, IRecyclableElementProvider<GameMission>
+public partial class MissionCollection : Control, IMissionHighlightProvider, IRecyclableElementProvider<GameMission>, IListProvider<MissionRewardSet>
 {
-    public event Action OnHighlightedItemFilterChanged;
-    [Signal]
-    public delegate void NameChangedEventHandler(string name);
-    [Export]
+	public event Action OnHighlightedItemFilterChanged;
+	[Signal]
+	public delegate void NameChangedEventHandler(string name);
+	[Export]
 	string testName;
 	[Export]
 	string testSearch;
-    [Export]
-    RecycleListContainer missionList;
-    [Export]
-    Control loadingIcon;
-    [Export]
-    bool sortByPower;
-    [Export]
-    bool sortByZoneCat;
+	[Export]
+	RecycleListContainer missionList;
+	[Export]
+	Node newMissionListNode;
+	[Export]
+	Control loadingIcon;
+	[Export]
+	CheckButton playableFilter;
+	[Export]
+	Button bulkTodoBtn;
+	[Export]
+	bool sortByPower;
+	[Export]
+	bool sortByZoneCat;
+	[Export]
+	bool requireAnyUnlockedForVisibility;
+	[Export]
+	bool alwaysHidePlayableFilter;
+	[Export]
+	bool ignoreLargeXPSetting;
 
-    List<GameMission> filteredMissions = new();
+	List<GameMission> filteredMissions = [];
+	List<MissionRewardSet> rewardSets = [];
 
-    public GameMission GetRecycleElement(int index) => (index >= 0 && index < filteredMissions.Count) ? filteredMissions[index] : null;
-    public int GetRecycleElementCount() => filteredMissions.Count;
+	public GameMission GetRecycleElement(int index) => (index >= 0 && index < filteredMissions.Count) ? filteredMissions[index] : null;
+	public int GetRecycleElementCount() => filteredMissions.Count;
 
-    PLSearch.Instruction[] missionSearchInstructions = Array.Empty<PLSearch.Instruction>();
-    PLSearch.Instruction[] itemSearchInstructions = Array.Empty<PLSearch.Instruction>();
+	PLSearch.Instruction[] missionSearchInstructions = [];
+	PLSearch.Instruction[] itemSearchInstructions = [];
+	IList<MissionRewardSet> IListProvider<MissionRewardSet>.List => rewardSets;
 
-    public override async void _Ready()
-    {
-        missionList.SetProvider(this);
-        GameMission.OnMissionsUpdated += FilterMissions;
-        GameMission.OnMissionsInvalidated += ClearMissions;
-        VisibilityChanged += TryFilterMissions;
-        EmitSignal(SignalName.NameChanged, testName);
-        UpdateFilters();
-        if (!await GameAccount.activeAccount.Authenticate())
-            return;
-        ClearMissions();
-        await GameMission.UpdateMissions();
-    }
-
-    public override void _ExitTree()
-    {
-        GameMission.OnMissionsUpdated -= FilterMissions;
-        GameMission.OnMissionsInvalidated -= ClearMissions;
-    }
-
-    public void GoToSearch()
-    {
-        MissionInterface.SearchInMissions(testSearch, true);
-    }
-
-    public void SetSortByPower(bool val)
-    {
-        sortByPower = val;
-        FilterMissions();
-    }
-
-    public void OnElementSpawned(IRecyclableEntry entry)
-    {
-        if (entry is not MissionEntry missionEntry) 
-            return;
-        missionEntry.SetHighlightProvider(this);
-    }
-
-    public void UpdateFilters()
+	public void OnItemSelected(MissionRewardSet rewardSet, string context)
 	{
-        var searchText = testSearch;
-        if (searchText.Contains("///"))
-        {
-            string[] splitSearchText = searchText.Split("///");
-            missionSearchInstructions = PLSearch.GenerateSearchInstructions(splitSearchText[0]) ?? Array.Empty<PLSearch.Instruction>();
-            itemSearchInstructions = PLSearch.GenerateSearchInstructions(splitSearchText[1..].Join()) ?? Array.Empty<PLSearch.Instruction>();
-        }
-        else
-        {
-            missionSearchInstructions = PLSearch.GenerateSearchInstructions(searchText) ?? Array.Empty<PLSearch.Instruction>();
-            itemSearchInstructions = Array.Empty<PLSearch.Instruction>();
-        }
-        OnHighlightedItemFilterChanged?.Invoke();
-    }
+		MissionViewer.ShowMission(rewardSet.mission);
+	}
 
-    bool MissionFilter(GameMission mission)
-    {
-        if (!PLSearch.EvaluateInstructions(missionSearchInstructions, mission.missionData))
-            return false;
+	IListHandler newMissionList;
+	public override void _Ready()
+	{
+		missionList?.SetProvider(this);
+		if (newMissionListNode is IListHandler newListHandler)
+		{
+			newMissionList = newListHandler;
+			newMissionList.LinkListProvider(this);
+		}
 
-        return mission.allItems.Any(item => MissionInterface.MatchItemOrEquivelent(item, itemSearchInstructions));
-    }
+		GameAccount.ActiveAccountChanged += UpdateAccount;
+		GameMission.OnMissionsUpdated += SetMissionsDirty;
+		GameMission.OnMissionsInvalidated += ClearMissions;
+		AppConfig.OnConfigChanged += OnConfigChanged;
+		CtrlParent.VisibilityChanged += FilterMissions;
+		MissionToDoListController.OnToDoListChanged += FilterMissions;
+		bulkTodoBtn?.Pressed += BulkAddToDoList;
+		if (playableFilter?.IsInsideTree() == true)
+		{
+			playableFilter.Pressed += SetMissionsDirty;
+			playableFilter.Visible = GameAccount.ActiveAccount.isOwned && !alwaysHidePlayableFilter;
+		}
+		EmitSignal(SignalName.NameChanged, testName);
+		ClearMissions();
+		UpdateFilters();
+		SetMissionsDirty();
+	}
 
-    public Predicate<GameItem> HighlightedItemFilter => ItemFilter;
-    bool ItemFilter(GameItem item) => itemSearchInstructions.Length > 0 && MissionInterface.MatchItemOrEquivelent(item, itemSearchInstructions);
-    public void ClearMissions()
-    {
-        loadingIcon.Visible = true;
-        missionList.Visible = false;
-    }
+	private void OnConfigChanged(string section, string key, JsonNode value)
+	{
+		if (section != "missions")
+			return;
+		if (key == "excludeLargeXP" || key == "excludeLargeEvo" || key == "excludeLargeReperk")
+		{
+			UpdateFilters();
+			SetMissionsDirty();
+		}
+	}
 
-    void TryFilterMissions()
-    {
-        if (needsUpdate)
-            FilterMissions();
-    }
+	public override void _ExitTree()
+	{
+		GameAccount.ActiveAccountChanged -= UpdateAccount;
+		GameMission.OnMissionsUpdated -= SetMissionsDirty;
+		GameMission.OnMissionsInvalidated -= ClearMissions;
+		AppConfig.OnConfigChanged -= OnConfigChanged;
+		MissionToDoListController.OnToDoListChanged -= FilterMissions;
+	}
 
-    bool needsUpdate = false;
+	void UpdateAccount()
+	{
+		if (playableFilter?.IsInsideTree() == true)
+			playableFilter.Visible = GameAccount.ActiveAccount.isOwned && !alwaysHidePlayableFilter;
+		SetMissionsDirty();
+	}
 
-    public void FilterMissions()
-    {
-        loadingIcon.Visible = false;
-        missionList.Visible = true;
+	public void GoToSearch()
+	{
+		MissionInterface.SearchInMissions(testSearch, true);
+	}
 
-        if (!IsVisibleInTree())
-        {
-            needsUpdate = true;
-            return;
-        }
-        needsUpdate = false;
+	public void SetSortByPower(bool val)
+	{
+		sortByPower = val;
+		FilterMissions();
+	}
 
-        var sortedMissions =
-            GameMission.currentMissions?
-            .Where(MissionFilter).OrderBy(m=>1) ?? default;
+	void BulkAddToDoList()
+	{
+		MissionToDoListController.BulkAddToList([.. rewardSets.SelectMany(s => s.items.Select(i => new MissionRewardPair(s.mission, i)))]);
+		bulkTodoBtn?.Disabled = true;
+	}
 
-        if (sortByZoneCat)
-        {
-            sortedMissions = sortedMissions
-                .ThenBy(m => m.TheaterCat switch
-                {
-                    "t" => -4,
-                    "c" => -3,
-                    "p" => -2,
-                    "s" => -1,
-                    "v" => 0,
-                    _ => 0
-                })
-                .ThenBy(m => -m.PowerLevel);
-        }
-        else if (sortByPower)
-        {
-            sortedMissions = sortedMissions
-                .ThenBy(m => -m.PowerLevel);
-        }
-        else
-        {
-            sortedMissions = sortedMissions
-                .ThenBy(m => m.allItems
-                    .Where(ItemFilter)
-                    .Select(i => -i.sortingTemplate.RarityLevel * i.quantity)
-                    .Sum()
-                );
-        }
+	public void OnElementSpawned(IRecyclableEntry entry)
+	{
+		if (entry is not MissionEntry missionEntry)
+			return;
+		missionEntry.SetHighlightProvider(this);
+	}
 
-        filteredMissions = sortedMissions.ToList();
+	string activeSearchText;
+	public void UpdateFilters()
+	{
+		var searchText = testSearch;
+		if (!ignoreLargeXPSetting) //XP is now always excluded 
+			searchText = searchText.Trim() + " !(AccountResource | CardPack XP | Gold)";
+		if (AppConfig.Get("missions", "excludeLargeEvo", true) && !ignoreLargeXPSetting)
+			searchText = searchText.Trim() + " !(templateId='reagent_c_')";
+		if (AppConfig.Get("missions", "excludeLargeReperk", false) && !ignoreLargeXPSetting)
+			searchText = searchText.Trim() + " !RE-PERK";
+		activeSearchText = searchText;
+		if (searchText.Contains("///"))
+		{
+			string[] splitSearchText = searchText.Split("///");
+			missionSearchInstructions = PLSearch.GenerateSearchInstructions(splitSearchText[0]) ?? [];
+			itemSearchInstructions = PLSearch.GenerateSearchInstructions(splitSearchText[1..].Join()) ?? [];
+		}
+		else
+		{
+			missionSearchInstructions = PLSearch.GenerateSearchInstructions(searchText) ?? [];
+			itemSearchInstructions = [];
+		}
+		OnHighlightedItemFilterChanged?.Invoke();
+	}
 
-        missionList.UpdateList(true);
-    }
+	bool MissionFilter(GameMission mission)
+	{
+		if (playableFilter?.ButtonPressed == true && !mission.PlayableBy(GameAccount.ActiveAccount))
+			return false;
+		if (!PLSearch.EvaluateInstructions(missionSearchInstructions, mission.SearchObject))
+			return false;
+
+		return mission.allItems.Any(item => MissionInterface.MatchItemOrEquivelent(item, itemSearchInstructions));
+	}
+
+	public Func<GameItem, bool> HighlightedItemFilter => ItemFilter;
+	bool ItemFilter(GameItem item) => itemSearchInstructions.Length > 0 && MissionInterface.MatchItemOrEquivelent(item, itemSearchInstructions);
+	public void ClearMissions()
+	{
+		loadingIcon.Visible = true;
+		rewardSets = [];
+		newMissionList?.UpdateList();
+		missionList?.Visible = false;
+		if (requireAnyUnlockedForVisibility)
+			Visible = false;
+	}
+
+	public void SetMissionsDirty()
+	{
+		missionsDirty = true;
+		FilterMissions();
+	}
+
+	bool missionsDirty = false;
+
+	Control CtrlParent => GetParent() as Control;
+
+	public void FilterMissions()
+	{
+		if (!missionsDirty || !CtrlParent.IsVisibleInTree())
+			return;
+
+		missionsDirty = false;
+
+		loadingIcon.Visible = false;
+		missionList?.Visible = true;
+
+		var sortedMissions =
+			(GameMission.MissionList?
+			.Where(MissionFilter) ?? []).OrderBy(m => 1);
+
+		if (requireAnyUnlockedForVisibility)
+		{
+			Visible = sortedMissions.Any();
+			if (!Visible)
+				return;
+		}
+
+		if (sortByZoneCat)
+		{
+			sortedMissions = sortedMissions
+				.ThenBy(m => m.TheaterCat switch
+				{
+					"t" => -4,
+					"c" => -3,
+					"p" => -2,
+					"s" => -1,
+					"v" => 0,
+					_ => 0
+				})
+				.ThenBy(m => -m.PowerLevel);
+		}
+		else if (sortByPower)
+		{
+			sortedMissions = sortedMissions
+				.ThenBy(m => -m.PowerLevel);
+		}
+		else
+		{
+			sortedMissions = sortedMissions
+				.ThenBy(m => m.allItems
+					.Where(ItemFilter)
+					.Sum(i => -i.sortingTemplate.RarityLevel * i.quantity)
+				);
+		}
+
+		filteredMissions = [.. sortedMissions];
+		rewardSets = [..
+			filteredMissions.Select(m => new MissionRewardSet(m, [
+				.. m.allItems
+					.Where(r =>
+						r.template.DisplayName != "Gold" &&
+						r.template.DisplayName != "Venture XP"
+					)
+					.Where(ItemFilter)
+					.OrderBy(r => -r.sortingTemplate.RarityLevel)
+					.ThenBy(r => -r.quantity)
+			]))
+		];
+		bulkTodoBtn?.Disabled = rewardSets.All(s => s.AllToDo);
+		newMissionList?.UpdateList();
+		missionList?.UpdateList(true);
+	}
+}
+
+public record struct MissionRewardSet(GameMission mission, GameItem[] items)
+{
+	public bool AnyToDo => items.Any(MissionToDoListController.IsOnToDoList);
+	public bool AllToDo => items.All(MissionToDoListController.IsOnToDoList);
 }

@@ -1,138 +1,297 @@
 using Godot;
 using System;
-using System.Drawing;
 using System.Linq;
 
 [Tool]
 public partial class DynamicGridContainer : Container
 {
-    [Export(PropertyHint.Range, "1, 10, or_greater")] int minCols = 1;
-    [Export] bool compressSpacing;
-    [Export] Vector2 spacing;
+	[Export(PropertyHint.Range, "1, 10, or_greater")]
+	int MinCols
+	{
+		get => minCols;
+		set
+		{
+			minCols = value;
+			UpdateLayout();
+		}
+	}
+	int minCols = 1;
+	[Export]
+	bool AutoColWidth
+	{
+		get => autoColWidth;
+		set
+		{
+			autoColWidth = value;
+			UpdateLayout();
+		}
+	}
+	bool autoColWidth = true;
+	[Export]
+	float ManualColWidth
+	{
+		get => manualColWidth;
+		set
+		{
+			manualColWidth = value;
+			UpdateLayout();
+		}
+	}
+	float manualColWidth;
+	[Export]
+	bool CompressSpacing
+	{
+		get => compressSpacing;
+		set
+		{
+			compressSpacing = value;
+			UpdateLayout();
+		}
+	}
+	bool compressSpacing;
+	[Export]
+	bool ExpandChildren
+	{
+		get => field;
+		set
+		{
+			field = value;
+			UpdateLayout();
+		}
+	}
+	[Export(PropertyHint.Range, "0, 1")]
+	float CompressTowards
+	{
+		get => compressTowards;
+		set
+		{
+			compressTowards = value;
+			UpdateLayout();
+		}
+	}
+	float compressTowards = 0.5f;
+	[Export]
+	Vector2 Spacing
+	{
+		get => spacing;
+		set
+		{
+			spacing = value;
+			UpdateLayout();
+		}
+	}
+	Vector2 spacing = Vector2.One * 5;
+	[Export]
+	bool UseManualColumnCounts
+	{
+		get => useManualColCounts;
+		set
+		{
+			useManualColCounts = value;
+			UpdateLayout();
+		}
+	}
+	bool useManualColCounts;
+	[Export]
+	bool UseLargestChild
+	{
+		get => useLargestChild;
+		set
+		{
+			useLargestChild = value;
+			UpdateLayout();
+		}
+	}
+	bool useLargestChild;
+	[Export]
+	int[] ColumnCounts
+	{
+		get => manualColumnCounts;
+		set
+		{
+			manualColumnCounts = value;
+			UpdateLayout();
+		}
+	}
+	int[] manualColumnCounts;
+
+	//get col count from col width
+	//derive rows from col count
+	//min height of each row is the largest child min height
+
+	//public override void _Ready()
+	//{
+	//    SortChildren += UpdateLayout;
+	//}
 
 	bool lockMinSize = false;
 	public override Vector2 _GetMinimumSize()
-    {
-		if(lockMinSize)
+	{
+		if (lockMinSize)
 			return Vector2.Zero;
-        lockMinSize = true;
-        var children = GetChildren();
-        int visibleChildCount = children.Count(c => (c as Control).Visible);
-        if (visibleChildCount == 0)
-        {
-            lockMinSize = false;
-            return Vector2.Zero;
-        }
+		try
+		{
+			lockMinSize = true;
+			(var sizeChild, var children) = GetRelevantChildren();
+			if (children.Length == 0)
+			{
+				lockMinSize = false;
+				return Vector2.Zero;
+			}
 
-		Vector2 firstChildMinSize = GetFirstChildMinSize();
+			int colCount = GetColCount(sizeChild.GetCombinedMinimumSize().X, out var colWidth);
+			//int rowCount = Mathf.CeilToInt((float)children.Length / colCount);
+			//float totalHeight = GetRowHeights(children, colCount).Sum();
 
-		int rowCount = CalcGrid(firstChildMinSize, visibleChildCount).Y;
+			Vector2 newMinSize = new(
+				(colWidth * minCols) + (spacing.X * (minCols - 1)),
+				GetRowHeights(children, colCount).Sum()
+			);
+			return newMinSize;
+		}
+		finally
+		{
+			lockMinSize = false;
+		}
+	}
 
-		Vector2 newMinSize = new(
-            (firstChildMinSize.X * minCols) + (Mathf.Max(spacing.X, 0) * (minCols - 1)),
-            (firstChildMinSize.Y * rowCount) + (spacing.Y * (rowCount - 1))
-            );
-		lockMinSize = false;
-		return newMinSize;
-    }
+	Control[] GetControlChildren() => [.. GetChildren().OfType<Control>()];
+	Control PrimaryChild(Control[] ofChildren) => useLargestChild ? (ofChildren ?? []).OrderBy(c => c.GetCombinedMinimumSize().X).LastOrDefault() : ofChildren?.FirstOrDefault();
 
-	public Vector2 GetFirstChildMinSize() => GetChild<Control>(0).GetCombinedMinimumSize();
+	(Control, Control[]) GetRelevantChildren()
+	{
+		var children = GetControlChildren();
+		if (children.Length == 0)
+			return (null, []);
+		return (PrimaryChild(children), [.. children.Where(c => c.Visible)]);
+	}
+
+	public int GetColCount(float? givenChildWidth = null) => GetColCount(givenChildWidth, out var _);
+	public int GetColCount(float? givenChildWidth, out float colWidth)
+	{
+		colWidth = autoColWidth ? (givenChildWidth ?? PrimaryChild(GetControlChildren()).GetCombinedMinimumSize().X) : manualColWidth;
+		int colCount = Mathf.Max(Mathf.FloorToInt((Size.X + spacing.X) / (colWidth + spacing.X)), minCols);
+
+		if (useManualColCounts && manualColumnCounts is not null)
+		{
+			int selectedColCount = 1;
+			for (int i = 0; i < manualColumnCounts.Length; i++)
+			{
+				if (manualColumnCounts[i] <= colCount)
+					selectedColCount = manualColumnCounts[i];
+				else
+					break;
+			}
+			colCount = Mathf.Max(selectedColCount, minCols);
+		}
+		return colCount;
+	}
 
 
-    bool disableSort = false;
+	bool disableSort = false;
 	public void SetDisableSort(bool value)
 	{
-        disableSort = value;
+		disableSort = value;
 		if (!disableSort)
-			_Notification((int)NotificationSortChildren);
-    }
+			UpdateLayout();
+	}
+
+	public float[] GetRowHeights(Control[] children, int colCount)
+	{
+		int rowCount = Mathf.CeilToInt((float)children.Length / colCount);
+		float[] heights = new float[rowCount];
+		float curHeight = 0;
+		for (int i = 0; i < children.Length; i++)
+		{
+			curHeight = Mathf.Max(curHeight, children[i].GetCombinedMinimumSize().Y);
+
+			if (i % colCount == colCount - 1)
+			{
+				heights[i / colCount] = curHeight + spacing.Y;
+				curHeight = 0;
+			}
+		}
+		if (children.Length % colCount != 0)
+		{
+			heights[^1] = curHeight;
+		}
+		else
+		{
+			heights[^1] -= spacing.Y;
+		}
+		return heights;
+	}
 
 	bool lockLayout = false;
 	public override void _Notification(int what)
 	{
+		if (what == NotificationSortChildren)
+			UpdateLayout();
+	}
+
+	void UpdateLayout()
+	{
 		if (disableSort || lockLayout)
 			return;
-		if (what == NotificationSortChildren)
-        {
-            lockLayout = true;
-            CustomMinimumSize += Vector2.One * 0.1f;
-            CustomMinimumSize -= Vector2.One * 0.1f;
-            //GetCombinedMinimumSize();
+		try
+		{
+			lockLayout = true;
 
-            var children = GetChildren();
-            int visibleChildCount = children.Count(c => (c as Control).Visible);
-            if (visibleChildCount == 0)
-            {
-                lockLayout = false;
-                return;
-            }
+			//force a minimum size change so that parent containers will check this containers minimum size again
+			CustomMinimumSize += Vector2.One * 0.1f;
+			CustomMinimumSize -= Vector2.One * 0.1f;
 
-			Vector2 firstChildMinSize = GetFirstChildMinSize();
-
-            var grid = CalcGrid(firstChildMinSize, visibleChildCount);
-            int colCount = grid.X;
-			Rect2 cellSizeAndSpacing = CalcSpacing(grid, spacing, firstChildMinSize);
-
-            int compressedCols = Mathf.Min(colCount, visibleChildCount);
-            Vector2 compressionPadding = new(0, 0);
-            if (compressSpacing)
-                compressionPadding.X = (Size.X - ((cellSizeAndSpacing.Position.X * (compressedCols - 1)) + (cellSizeAndSpacing.Size.X * compressedCols))) * 0.5f;
-
-
-            int validIndex = 0;
-			foreach (Control c in children)
+			var children = GetControlChildren();
+			int visibleChildCount = children.Count(c => c.Visible);
+			if (visibleChildCount == 0)
 			{
-				if (c is null || !c.IsVisibleInTree())
+				lockLayout = false;
+				return;
+			}
+			int colCount = GetColCount(null, out var colWidth);
+			int rowCount = Mathf.CeilToInt((float)children.Length / colCount);
+
+			int compressedCols = Mathf.Min(colCount, visibleChildCount);
+			Vector2 gridSpacing = spacing;
+			//gridSpacing.X = Mathf.Max(gridSpacing.X, 0);
+			//gridSpacing.Y = Mathf.Max(gridSpacing.Y, 0);
+			Vector2 gridOrigin = new(0, 0);
+			float extraSpace = Size.X - ((colWidth * compressedCols) + (gridSpacing.X * (compressedCols - 1)));
+			if (compressSpacing)
+			{
+				gridOrigin.X = extraSpace * compressTowards;
+			}
+			else if (ExpandChildren)
+			{
+				colWidth += extraSpace / colCount;
+			}
+			else
+			{
+				gridSpacing.X += extraSpace / (colCount - 1);
+			}
+
+			float[] rowHeights = GetRowHeights(children, colCount);
+
+			int validIndex = 0;
+			foreach (var c in children)
+			{
+				if (!c.IsVisibleInTree())
 					continue;
 				int row = validIndex / colCount;
 				int col = validIndex % colCount;
-				FitChildInRect(c, new Rect2(((cellSizeAndSpacing.Position + cellSizeAndSpacing.Size) * new Vector2(col, row)) + compressionPadding, cellSizeAndSpacing.Size));
+				float rowOffset = rowHeights[..row].Sum();
+				FitChildInRect(c,
+					new Rect2(
+						gridOrigin + new Vector2((colWidth + gridSpacing.X) * col, rowOffset),
+						new Vector2(colWidth, c.GetCombinedMinimumSize().Y)
+					)
+				);
 				validIndex++;
-            }
-            lockLayout = false;
-        }
-	}
-
-    public virtual Vector2I CalcGrid(Vector2 childSize, int visibleChildCount)
-	{
-		Vector2 size = Size;
-		if(visibleChildCount==-1)
-			visibleChildCount = GetChildren().Count(c=>(c as Control).Visible);
-
-		int colCount = Mathf.Max(Mathf.FloorToInt((size.X + Mathf.Max(spacing.X, 0)) / (childSize.X + Mathf.Max(spacing.X, 0))), minCols);
-		int rowCount = Mathf.CeilToInt((float)visibleChildCount / colCount);
-
-		Vector2I newGrid = new(colCount, rowCount);
-
-        return newGrid;
-	}
-
-    public virtual Rect2 CalcSpacing(Vector2I grid, Vector2 currentSpacing, Vector2 currentSize)
-	{
-		Vector2 finalSpacing = currentSpacing;
-		Vector2 finalSize = currentSize;
-
-		if(compressSpacing)
-            return new(finalSpacing, finalSize);
-
-        if (finalSpacing.X < 0)
-		{
-			if (grid.X > 1)
-				finalSpacing.X = (Size.X - (finalSize.X * grid.X)) / (grid.X - 1);
-			else
-				finalSpacing.X = 0;
+			}
 		}
-		else
+		finally
 		{
-			if (grid.X > 1)
-				finalSize.X = (Size.X - (finalSpacing.X * grid.X - 1)) / grid.X;
-			else
-				finalSize.X = Size.X;
+			lockLayout = false;
 		}
-
-        Rect2 newSpacingRect = new(finalSpacing, finalSize);
-
-        return newSpacingRect;
 	}
-
 }

@@ -1,7 +1,11 @@
 shader_type canvas_item;
+#include "Includes/SDFHelpers.gdshaderinc"
 
-uniform float threshold = 0.45;
-uniform float smoothness = 0.1;
+uniform sampler2D blendFrom;
+uniform float blendAmount:hint_range(0,1)=1;
+uniform float threshold:hint_range(0,1) = 0.45;
+uniform float smoothness:hint_range(0,1) = 0.1;
+uniform bool msdf = false;
 uniform bool skipSDF = false;
 
 varying vec4 modulate;
@@ -11,14 +15,19 @@ void vertex() {
 
 void fragment() {
 	vec4 source = texture(TEXTURE, UV);
-	float main = source.r;
-	
+	vec4 blend = texture(blendFrom, UV);
+
 	COLOR = modulate;
 	if(skipSDF){
-		COLOR.a = smoothstep(threshold, threshold+smoothness, main);
+		COLOR.a=source.r;
 	}
-	else{
-		COLOR.a=main;
+	else if (msdf)
+	{
+		COLOR.a = blendMSDF(blend.rgb, source.rgb, blendAmount, threshold, smoothness);
+	}
+	else
+	{
+		COLOR.a = evalDF(source.r, threshold, smoothness);
 	}
 	COLOR.a*=modulate.a;
 }

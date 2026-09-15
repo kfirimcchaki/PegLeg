@@ -1,0 +1,382 @@
+[gd_scene format=3 uid="uid://wb5ukb74fot1"]
+
+[ext_resource type="Script" uid="uid://dbf8rsvamv77x" path="res://Scripts/UserInterface/ListEntries/GameOfferEntry.cs" id="1_hvr15"]
+[ext_resource type="Texture2D" uid="uid://4gudg1raxie8" path="res://Images/AspectRatios/1x1Aspect.png" id="1_io7lf"]
+[ext_resource type="Shader" uid="uid://cypncf62qx5bc" path="res://Shaders/CardTriangleEffect.tres" id="2_6kl4y"]
+[ext_resource type="Texture2D" uid="uid://3atkm5dd5sh1" path="res://Images/AspectRatios/2x3Aspect.png" id="2_rx7yy"]
+[ext_resource type="Texture2D" uid="uid://bkqoyh11npn7c" path="res://Images/InterfaceIcons/TriangleScroll.png" id="3_c82yr"]
+[ext_resource type="Script" uid="uid://cf1wi6mkqvf8" path="res://Scripts/ShaderHook.cs" id="4_qji8a"]
+[ext_resource type="Texture2D" uid="uid://cs2v3mt4il1o2" path="res://Images/InterfaceIcons/BanjoPlaceholders/T-Soldier-HID-Commando-GunTough-R-T01-L.png" id="5_wjuhi"]
+[ext_resource type="Texture2D" uid="uid://bkj1uu2syehgg" path="res://Images/InterfaceIcons/BanjoPlaceholders/T-Item-GoldBars.png" id="7_bv0ye"]
+[ext_resource type="PackedScene" uid="uid://xvc01jygcwse" path="res://Scenes/responsive_button_area.tscn" id="8_ahbeu"]
+[ext_resource type="Texture2D" uid="uid://hskfanlp03l8" path="res://Images/InterfaceIcons/T-UI-SoldOut.png" id="8_e6bid"]
+[ext_resource type="Material" uid="uid://cwag018nxlpqn" path="res://Shaders/Materials/ShadowImageMat.tres" id="8_gu5mh"]
+[ext_resource type="Script" uid="uid://dfa7e1y4fpvp2" path="res://Scripts/UserInterface/ListEntries/GameItemEntry.cs" id="8_ocl4j"]
+[ext_resource type="Shader" uid="uid://dwjqthwpe1fq1" path="res://Shaders/InventoryItem.gdshader" id="8_r4evi"]
+[ext_resource type="Script" uid="uid://b0kobrw53uq3d" path="res://Scripts/UIElements/Signal Logic/InvertBoolean.cs" id="9_2uptj"]
+[ext_resource type="Texture2D" uid="uid://bihgi4th6uiae" path="res://Images/InterfaceIcons/T-Card-Hero-Anim-Triangle.png" id="9_g50ko"]
+[ext_resource type="Texture2D" uid="uid://vvcpsv0jcehf" path="res://Images/TextureResources/schematicNoise.tres" id="10_cxs4q"]
+[ext_resource type="Script" uid="uid://cgfl3ltqqutdv" path="res://Scripts/Config/ConfigConditionalBoolPassthrough.cs" id="11_cxs4q"]
+[ext_resource type="Script" uid="uid://cti7ijxybv3iw" path="res://Scripts/ContextMenu/ContextMenuHook.cs" id="11_mgblp"]
+[ext_resource type="Resource" uid="uid://7km1btwc7syu" path="res://Scripts/ContextMenu/ComponentLists/ShopOfferCtxList.tres" id="12_j05ur"]
+[ext_resource type="Script" uid="uid://bm5sma44lxciv" path="res://Scripts/RefreshTimerHook.cs" id="14_g50ko"]
+
+[sub_resource type="Gradient" id="Gradient_rxla7"]
+colors = PackedColorArray(0.9, 0.9, 0.9, 1, 0.6, 0.6, 0.6, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_cgiwg"]
+gradient = SubResource("Gradient_rxla7")
+fill = 1
+fill_from = Vector2(0.5, 1)
+fill_to = Vector2(0.5, 0)
+metadata/_snap_enabled = true
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ya7jx"]
+resource_local_to_scene = true
+shader = ExtResource("2_6kl4y")
+shader_parameter/TriangleTint = Color(0.9, 0.51, 0, 1)
+shader_parameter/TimeOffset = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sgac5"]
+resource_local_to_scene = true
+shader = ExtResource("8_r4evi")
+shader_parameter/ControlSize = Vector2(175, 175)
+shader_parameter/Fit = false
+shader_parameter/VerticalShift = 0.5
+shader_parameter/IsHero = true
+shader_parameter/IsSchematic = false
+shader_parameter/IsPack = false
+shader_parameter/Noise = ExtResource("10_cxs4q")
+shader_parameter/HeroTriangles = ExtResource("9_g50ko")
+shader_parameter/LockTime = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nb4if"]
+content_margin_left = 3.0
+content_margin_right = 3.0
+bg_color = Color(0, 0, 0, 0.392157)
+expand_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2ynyt"]
+content_margin_left = 2.0
+content_margin_top = 5.0
+content_margin_right = 2.0
+bg_color = Color(1, 1, 1, 1)
+skew = Vector2(0, -0.05)
+expand_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pt1cr"]
+content_margin_left = 2.0
+content_margin_top = 0.0
+content_margin_right = 3.0
+content_margin_bottom = 2.0
+bg_color = Color(0.6, 0.6, 0.6, 0.752941)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3n3on"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+
+[node name="GameOfferEntry" type="MarginContainer" unique_id=457751591 node_paths=PackedStringArray("grantedItemEntry", "priceEntry", "releaseDateTimer")]
+custom_minimum_size = Vector2(175, 0)
+offset_right = 175.0
+offset_bottom = 175.0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("1_hvr15")
+grantedItemEntry = NodePath("DetailsArea")
+priceEntry = NodePath("DetailsArea/PriceBox")
+releaseDateTimer = NodePath("Upcoming")
+
+[node name="AspectTexture" type="TextureRect" parent="." unique_id=71591285]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+texture = ExtResource("1_io7lf")
+expand_mode = 5
+
+[node name="RarityGradient" type="TextureRect" parent="." unique_id=1876681605]
+visible = false
+self_modulate = Color(0.901961, 0.509804, 0, 1)
+layout_mode = 2
+texture = SubResource("GradientTexture2D_cgiwg")
+expand_mode = 1
+
+[node name="Control" type="Control" parent="." unique_id=1602759461]
+visible = false
+clip_contents = true
+layout_mode = 2
+
+[node name="AspectTexture" type="TextureRect" parent="Control" unique_id=2030130082]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("2_rx7yy")
+expand_mode = 5
+
+[node name="Triangles" type="TextureRect" parent="Control/AspectTexture" unique_id=1475036590]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_ya7jx")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_c82yr")
+expand_mode = 1
+script = ExtResource("4_qji8a")
+
+[node name="ItemIcon" type="TextureRect" parent="." unique_id=693996991]
+visible = false
+layout_mode = 2
+texture = ExtResource("5_wjuhi")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ItemIcon2" type="TextureRect" parent="." unique_id=969399818]
+self_modulate = Color(0.901961, 0.509804, 0, 1)
+material = SubResource("ShaderMaterial_sgac5")
+layout_mode = 2
+texture = ExtResource("5_wjuhi")
+expand_mode = 1
+script = ExtResource("4_qji8a")
+syncControlSize = true
+
+[node name="IsHero" type="Node" parent="ItemIcon2" unique_id=138082285]
+script = ExtResource("11_cxs4q")
+section = "item_shop"
+key = "simple_backgrounds"
+requiredState = false
+
+[node name="IsSchematic" type="Node" parent="ItemIcon2" unique_id=1859948963]
+script = ExtResource("11_cxs4q")
+section = "item_shop"
+key = "simple_backgrounds"
+requiredState = false
+
+[node name="SoldOut" type="MarginContainer" parent="." unique_id=1664636025]
+visible = false
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="TextureRect" type="TextureRect" parent="SoldOut" unique_id=956206867]
+material = ExtResource("8_gu5mh")
+layout_mode = 2
+texture = ExtResource("8_e6bid")
+expand_mode = 1
+
+[node name="Label" type="Label" parent="SoldOut/TextureRect" unique_id=589884202]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -9.0
+offset_right = 20.0
+offset_bottom = 9.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.523599
+pivot_offset = Vector2(63.5, 19)
+theme_override_constants/outline_size = 16
+theme_override_font_sizes/font_size = 36
+text = "Sold Out"
+
+[node name="InStock" type="Node" parent="SoldOut/TextureRect" unique_id=1447175276]
+script = ExtResource("9_2uptj")
+
+[node name="Upcoming" type="MarginContainer" parent="." unique_id=984934216 node_paths=PackedStringArray("target")]
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("14_g50ko")
+target = NodePath("TextureRect/Label2")
+timerType = 5
+formatType = 2
+useWeeks = true
+useDecimalDaysAndWeeks = false
+
+[node name="TextureRect" type="TextureRect" parent="Upcoming" unique_id=1897277058]
+material = ExtResource("8_gu5mh")
+layout_mode = 2
+texture = ExtResource("8_e6bid")
+expand_mode = 1
+
+[node name="Label" type="Label" parent="Upcoming/TextureRect" unique_id=1898696091]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(63.5, 19)
+theme_override_constants/outline_size = 16
+theme_override_font_sizes/font_size = 24
+text = "Returns in"
+
+[node name="Label2" type="Label" parent="Upcoming/TextureRect" unique_id=661925880]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_top = 28.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(63.5, 19)
+theme_override_constants/outline_size = 16
+theme_override_font_sizes/font_size = 24
+text = "3 weeks"
+
+[node name="DetailsArea" type="VBoxContainer" parent="." unique_id=890526236]
+clip_contents = true
+layout_mode = 2
+script = ExtResource("8_ocl4j")
+useLargePreview = true
+
+[node name="Space" type="Control" parent="DetailsArea" unique_id=2060883242]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="NameBox" type="PanelContainer" parent="DetailsArea" unique_id=523615115]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_nb4if")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DetailsArea/NameBox" unique_id=2020041111]
+layout_mode = 2
+theme_override_constants/separation = -3
+
+[node name="TypeLabel" type="Label" parent="DetailsArea/NameBox/VBoxContainer" unique_id=2017520606]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/line_spacing = 0
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 10
+text = "Hero
+"
+horizontal_alignment = 1
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[node name="NameLabel" type="Label" parent="DetailsArea/NameBox/VBoxContainer" unique_id=260017092]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+theme_override_constants/line_spacing = 0
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 12
+text = "This is a Hero Name"
+horizontal_alignment = 1
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[node name="PriceBox" type="PanelContainer" parent="DetailsArea" unique_id=936779202]
+self_modulate = Color(0, 0.0705882, 0.231373, 1)
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_2ynyt")
+script = ExtResource("8_ocl4j")
+
+[node name="MarginContainer" type="MarginContainer" parent="DetailsArea/PriceBox" unique_id=1238462940]
+layout_mode = 2
+theme_override_constants/margin_left = 2
+theme_override_constants/margin_top = -5
+theme_override_constants/margin_bottom = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="DetailsArea/PriceBox/MarginContainer" unique_id=1151472584]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="CurrencyIcon" type="TextureRect" parent="DetailsArea/PriceBox/MarginContainer/HBoxContainer" unique_id=1574239399]
+layout_mode = 2
+texture = ExtResource("7_bv0ye")
+expand_mode = 3
+
+[node name="PriceAmount" type="Label" parent="DetailsArea/PriceBox/MarginContainer/HBoxContainer" unique_id=9616411]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/line_spacing = 0
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
+text = "10000"
+text_overrun_behavior = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1334538617]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="StockPanel" type="PanelContainer" parent="MarginContainer" unique_id=1871761719]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_pt1cr")
+
+[node name="Stock" type="Label" parent="MarginContainer/StockPanel" unique_id=1573733947]
+layout_mode = 2
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 10
+text = "x999"
+
+[node name="Outline" type="Panel" parent="." unique_id=791750971]
+self_modulate = Color(0.901961, 0.509804, 0, 1)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3n3on")
+
+[node name="Responsive Button Area" parent="." unique_id=285474982 instance=ExtResource("8_ahbeu")]
+layout_mode = 2
+outlinePadding = 0.0
+
+[node name="Ctx" type="Node" parent="Responsive Button Area" unique_id=274755688 node_paths=PackedStringArray("itemSource", "offerSource")]
+script = ExtResource("11_mgblp")
+itemSource = NodePath("../../DetailsArea")
+offerSource = NodePath("../..")
+componentList = ExtResource("12_j05ur")
+
+[connection signal="IsInStockChanged" from="." to="SoldOut/TextureRect/InStock" method="EmitInverted"]
+[connection signal="IsLimitedStockChanged" from="." to="MarginContainer/StockPanel" method="set_visible"]
+[connection signal="NameChanged" from="." to="DetailsArea/NameBox/VBoxContainer/NameLabel" method="set_text"]
+[connection signal="StockChanged" from="." to="MarginContainer/StockPanel/Stock" method="set_text"]
+[connection signal="OutputChanged" from="ItemIcon2/IsHero" to="ItemIcon2" method="SetShaderBool" binds= ["IsHero"]]
+[connection signal="OutputChanged" from="ItemIcon2/IsSchematic" to="ItemIcon2" method="SetShaderBool" binds= ["IsSchematic"]]
+[connection signal="InvertedValue" from="SoldOut/TextureRect/InStock" to="SoldOut/TextureRect" method="set_visible"]
+[connection signal="IconChanged" from="DetailsArea" to="ItemIcon" method="set_texture"]
+[connection signal="IconChanged" from="DetailsArea" to="ItemIcon2" method="set_texture"]
+[connection signal="IconFit" from="DetailsArea" to="ItemIcon2" method="SetShaderBool" binds= ["Fit"]]
+[connection signal="IsHero" from="DetailsArea" to="ItemIcon2/IsHero" method="Output"]
+[connection signal="IsSchematic" from="DetailsArea" to="ItemIcon2/IsSchematic" method="Output"]
+[connection signal="RarityChanged" from="DetailsArea" to="RarityGradient" method="set_self_modulate"]
+[connection signal="RarityChanged" from="DetailsArea" to="ItemIcon2" method="set_self_modulate"]
+[connection signal="RarityChanged" from="DetailsArea" to="Outline" method="set_self_modulate"]
+[connection signal="RarityChanged" from="DetailsArea" to="Control/AspectTexture/Triangles" method="SetShaderColor" binds= ["TriangleTint"]]
+[connection signal="TooltipChanged" from="DetailsArea" to="Responsive Button Area" method="set_tooltip_text"]
+[connection signal="TypeChanged" from="DetailsArea" to="DetailsArea/NameBox/VBoxContainer/TypeLabel" method="set_text"]
+[connection signal="AmountChanged" from="DetailsArea/PriceBox" to="DetailsArea/PriceBox/MarginContainer/HBoxContainer/PriceAmount" method="set_text"]
+[connection signal="IconChanged" from="DetailsArea/PriceBox" to="DetailsArea/PriceBox/MarginContainer/HBoxContainer/CurrencyIcon" method="set_texture"]
+[connection signal="pressed" from="Responsive Button Area" to="." method="Inspect"]
