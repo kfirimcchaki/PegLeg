@@ -248,6 +248,24 @@ public partial class VirtualTabBar : Control
 		SetTabPressed(activeTabs.IndexOf(firstPressable));
 	}
 
+	/// <summary>
+	/// Android back button support. If a tab other than the first selectable one is open, switch
+	/// back to it (the way back behaves for bottom navigation on Android) and return true.
+	/// Returns false when the user is already on the first selectable tab, so the back handler can
+	/// fall through to leaving the app.
+	/// </summary>
+	public bool GoBackToFirstTab()
+	{
+		PreloadTabs();
+		if (activeTabs is null || activeTabs.Count == 0)
+			return false;
+		int firstPressable = activeTabs.FindIndex(TabPressable);
+		if (firstPressable < 0 || LatestTab == firstPressable)
+			return false;
+		SetTabPressed(firstPressable, true, true);
+		return true;
+	}
+
 	bool lockTabPresses = false;
 	public void SetTabPressed(int index, bool value = true, bool invertOthers = false)
 	{

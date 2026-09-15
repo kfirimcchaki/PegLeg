@@ -57,16 +57,25 @@ public partial class ContextMenu : Window
 		//GD.Print($"Components: " + componentScenes.Length);
 		for (int i = 0; i < componentScenes.Length; i++)
 		{
-			var cScene = componentScenes[i];
-			var cNode = cScene.Instantiate();
-			if (cNode is not AbstractContextComponent comp)
+			// One broken component must never take the whole interface down with it
+			// (this now also runs on Android, where the menu is used for long presses).
+			try
 			{
-				cNode.QueueFree();
-				//GD.Print("Bad Component");
-				continue;
+				var cScene = componentScenes[i];
+				var cNode = cScene.Instantiate();
+				if (cNode is not AbstractContextComponent comp)
+				{
+					cNode.QueueFree();
+					//GD.Print("Bad Component");
+					continue;
+				}
+				contextComponentDict.TryAdd(comp.Id, comp);
+				comp.menu = this;
 			}
-			contextComponentDict.TryAdd(comp.Id, comp);
-			comp.menu = this;
+			catch (System.Exception e)
+			{
+				GD.PushWarning("Failed to load context menu component: " + e.Message);
+			}
 		}
 		//GD.Print($"Components: " + contextComponentDict.Count);
 
@@ -83,6 +92,21 @@ public partial class ContextMenu : Window
 		{
 			MousePassthroughPolygon = visible ? noPassthrough : fullPassthrough;
 		}
+	}
+
+	/// <summary>True while a context menu is currently being displayed.</summary>
+	public static bool IsOpen => inst is not null && inst.open;
+
+	/// <summary>
+	/// Closes the open context menu, if any. Used by the Android back button handler.
+	/// Returns true when a menu was open and has been dismissed.
+	/// </summary>
+	public static bool CloseOpenMenu()
+	{
+		if (inst is null || !inst.open)
+			return false;
+		inst.CloseMenu();
+		return true;
 	}
 
 	List<HSeparator> activeSeparators = [];

@@ -48,6 +48,12 @@ attached to a release tagged `android-<branch>` so it can be downloaded straight
    the `linux-bionic` runtime identifier and finally as a debug build.
 7. Verifies the APK (`apksigner`, `aapt2`, library list, SHA-256) and writes `build-report.md`.
 
+## Android adaptations
+
+The APK this script produces is not a plain re-export: see [`ANDROID.md`](../ANDROID.md) for the
+back-button/back-gesture handling, display cutout padding, long-press context menus and the
+mobile-friendly project settings that this branch adds.
+
 ## Notes
 
 * The Gradle build template lands in `android/`, which is `.gitignore`d — it is generated,

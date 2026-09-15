@@ -218,9 +218,8 @@ info "keystore     = ${KEYSTORE}"
 # ---------------------------------------------------------------------------
 log "Compile check (C#, android platform)"
 # ---------------------------------------------------------------------------
-dotnet workload install android --skip-manifest-update >/dev/null 2>&1 || \
-  warn "Could not install the .NET 'android' workload (continuing - it is often not needed)."
-
+# No .NET workload is needed: Godot's Android export publishes for the
+# linux-bionic-arm64 runtime identifier, whose runtime pack comes from NuGet.
 if ! dotnet build PegLegGD.csproj -c ExportRelease -p:GodotTargetPlatform=android \
       2>&1 | tee "${PROJECT_DIR}/compile-check.log" | tail -n 40; then
   warn "The C# compile check failed - see compile-check.log"
