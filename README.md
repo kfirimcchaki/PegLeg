@@ -21,6 +21,7 @@ PegLeg currently suppoorts the following features:
 - Download and unzip PegLeg-Win64 from the [Latest Release](https://github.com/TomatechGames/PegLeg/releases/latest)
 - Open PegLeg and use a link code to sign in to your Epic account (PegLeg stores login data locally, and only uses it to authenticate directly with Epic)
 - Optionally, add any alt accounts you own from the drop-down menu in the top left corner
+- Android: build/sideload the APK with [`ci/build-android-apk.sh`](ci/build-android-apk.sh); the Android specific behaviour is documented in [ANDROID.md](ANDROID.md)
 
 ## Gallery
 ![A screenshot of the Llamas tab](https://github.com/user-attachments/assets/8c654ec0-6820-4e9b-a268-1a9ffe498a27)
